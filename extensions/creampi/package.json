@@ -1,0 +1,21 @@
+{
+  "name": "creampi-extension",
+  "version": "0.1.0",
+  "description": "Pi extension for tier-based parallel agent execution from Linear issues",
+  "type": "module",
+  "pi": {
+    "extensions": ["./index.ts"]
+  },
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "peerDependencies": {
+    "@earendil-works/pi-coding-agent": "*",
+    "typebox": "*"
+  },
+  "devDependencies": {
+    "vitest": "^3.2.1",
+    "@types/node": "^22.15.21"
+  }
+}
