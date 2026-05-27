@@ -15,75 +15,62 @@ When work arrives, the developer describes it to pi. Pi asks whether it warrants
 2. **PRD** (`/to-prd`) — synthesize from the conversation context, publish as parent Linear issue. References ADRs. Includes implementation decisions, testing decisions, user stories.
 3. **Issues** (`/to-issues`) — break PRD into vertical slices (tracer bullets). Each is AFK or HITL. Dependencies set as Linear native blocking relations. Published as child issues of the PRD parent.
 
-### Phase 2: Execution (long-running orchestrator)
+### Phase 2: Execution (in the same pi session)
 
-```bash
-creampi run ENG-42
+```
+pi> /run-tier ENG-42
 ```
 
-The orchestrator:
+The agent:
 
-1. Reads parent issue and all children from Linear
-2. Queries native blocking relations
-3. Computes tiers (groups of issues whose blockers are all resolved)
-4. For each tier:
-   - Surfaces HITL slices → notifies developer, pauses
-   - Dispatches AFK slices → parallel pi agents, each in its own git worktree
-   - Each agent: implements issue → pushes branch → CI runs
-   - On CI green: opens PR (stacked within tier if needed)
-   - Notifies developer: "Tier N complete, PRs ready for review"
-   - Waits for developer to merge
-5. After merge: re-reads Linear, computes next tier, repeats
+1. Calls `linear_fetch_issues` to get children and blocking relations
+2. Calls `compute_tiers` to get deterministic tier ordering
+3. Identifies the current tier (first tier with unfinished issues)
+4. For HITL slices: surfaces them, pauses for developer input
+5. For AFK slices: dispatches parallel workers via `subagent()` with `worktree: true`
+6. After workers complete: calls `open_pr` for each
+7. Calls `check_ci` to verify PRs pass
+8. Notifies developer: "Tier N complete, PRs ready for review"
+9. Stops and waits
 
-### What the developer does during execution
+Developer reviews PRs, merges, then:
 
-- Reviews PRs at tier boundaries
-- Resolves HITL issues when notified
-- Can walk away between tiers — orchestrator waits
+```
+pi> /run-tier ENG-42
+```
 
-## Repo Structure
+Agent re-reads Linear, computes next tier, repeats.
+
+## Architecture
+
+100% pi-native (ADR-0004). Distributed as a pi package.
 
 ```
 creampi/
-├── skills/              ← pi skills (symlinked to ~/.agents/skills/)
-├── extensions/          ← pi extensions
-├── packages/
-│   └── orchestrator/    ← TypeScript project (sandcastle + Linear)
+├── skills/
+│   └── run-tier/SKILL.md     ← orchestration flow instructions
+├── prompts/
+│   └── run-tier.md           ← slash command template
+├── extensions/
+│   └── creampi/
+│       ├── index.ts           ← registers tools
+│       ├── linear-client.ts   ← tested module → tool
+│       ├── tier-computer.ts   ← tested module → tool
+│       ├── pr-manager.ts      ← tested module → tool
+│       └── types.ts
 ├── CONTEXT.md
 ├── docs/adr/
-└── package.json
+└── package.json               ← pi package manifest
 ```
 
-## Orchestrator Config
-
-```yaml
-# .creampi/config.yaml
-
-linear:
-  workspace: "beyond-data-consulting"
-  team: "Engineering"
-
-models:
-  worker: "anthropic/claude-sonnet-4"
-  reviewer: "anthropic/claude-opus-4"
-
-workflow:
-  review: true
-  max-review-rounds: 2
-
-sandbox:
-  dockerfile: null       # null = no sandbox (worktrees only)
-
-branches:
-  pattern: "feature/{{issue-id}}-{{slug}}"
-
-notify:
-  on-tier-complete: true
+Installed with:
+```bash
+pi install git:github.com/fbocci/creampi
 ```
 
 ## Key Decisions
 
-- **Sandcastle as library, not framework** — see ADR-0001
+- **Pi-native architecture** — see ADR-0004 (supersedes ADR-0001)
 - **Worktrees without Docker** — see ADR-0002
 - **Linear as state machine** — see ADR-0003
-- **`/to-issues` must set Linear native blocking relations** — upstream PR or local wrapper TBD
+- **`/to-issues` must set Linear native blocking relations** — ENG-374

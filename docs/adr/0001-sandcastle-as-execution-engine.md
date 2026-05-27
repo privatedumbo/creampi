@@ -1,4 +1,4 @@
-# Sandcastle as execution engine, not as framework
+# ~~Sandcastle as execution engine, not as framework~~ — SUPERSEDED by ADR-0004
 
 We use sandcastle (`@ai-hero/sandcastle`) as a library for worktree isolation and agent lifecycle management, but we do not adopt its per-project distribution model (`.sandcastle/` directory, Dockerfile, `main.mts` in each repo).
 
