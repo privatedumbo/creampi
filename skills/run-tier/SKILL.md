@@ -99,23 +99,96 @@ Use TDD (red-green-refactor). One test at a time — do not write all tests firs
 Run tests before committing. Commit with message prefix '{issue-id}:'.
 ```
 
-### 6. Open PRs
+### 6. Review workers (optional)
 
-After all workers complete, for each worker that produced commits:
+**Skip this step entirely if `workflow.review` is `false` in `.creampi/config.yaml` (or if no config exists and the default is used — check the config first).** When `workflow.review` is `true`, review each worker's output before opening PRs.
+
+Read `.creampi/config.yaml` to determine `workflow.review` (default: `true`) and `workflow.maxReviewRounds` (default: `2`). Also read `models.reviewer` for the reviewer model.
+
+For each worker that produced commits, run a review loop on that worker's branch:
+
+#### 6a. Dispatch reviewer
+
+Launch a fresh-context reviewer to inspect the worker's diff. The reviewer must not edit files — it returns findings only.
+
+```typescript
+subagent({
+  agent: "reviewer",
+  task: `Review the current diff on branch {branch} for issue {issue-id}: {issue-title}.
+
+Inspect the changed files directly. Return concise, evidence-backed findings with file/line references. Categorize each finding as:
+- 🛑 Blocker — must fix before merge
+- ⚠️ Fix worth doing now — should fix, not a blocker
+- 💡 Optional — nice to have, can defer
+
+Do not edit files. Do not run subagents.`,
+  context: "fresh",
+  async: true
+})
+```
+
+#### 6b. Synthesize findings
+
+After the reviewer completes, assess the findings:
+
+- If there are **no blockers or fixes worth doing now** → review is clean, proceed to step 7
+- If there are **blockers or fixes worth doing now** → dispatch a fix worker (step 6c)
+- **Optional/deferred findings** → note them in the tier summary but do not fix
+
+#### 6c. Dispatch fix worker
+
+If the reviewer found issues worth fixing, dispatch a forked-context worker on the same branch:
+
+```typescript
+subagent({
+  agent: "worker",
+  task: `Apply the reviewer's accepted fixes on branch {branch} for issue {issue-id}.
+
+Reviewer findings:
+{synthesized findings — blockers and fixes worth doing now only}
+
+Apply only the fixes listed above. Do not expand scope. Run tests after fixing. Commit with message prefix '{issue-id}: review fixes'.`,
+  async: true
+})
+```
+
+#### 6d. Repeat or stop
+
+After the fix worker completes, increment the review round counter. Then:
+
+- If **round < `workflow.maxReviewRounds`** → go back to step 6a (dispatch another reviewer)
+- If **round >= `workflow.maxReviewRounds`** → stop the review loop, proceed to step 7. Report any remaining unresolved findings in the tier summary.
+
+Report review progress to the developer:
+
+```
+🔍 Review round {N}/{max} for {issue-id}:
+  - {count} blockers, {count} fixes applied, {count} optional deferred
+```
+
+When the review loop completes cleanly (no remaining blockers), report:
+
+```
+✅ {issue-id}: Review clean after {N} round(s)
+```
+
+### 7. Open PRs
+
+After all workers complete (and reviews pass, if enabled), for each worker that produced commits:
 
 1. Call `open_pr` with the worker's branch name, the issue ID, and the issue title
 2. Call `linear_update_status` to set the issue to "In Review"
 
 If a worker produced no commits or failed, report it but continue with the other workers.
 
-### 7. Check CI
+### 8. Check CI
 
 For each opened PR, call `check_ci` with the PR number. Report the results:
 
 - ✅ PR #{N} ({issue-id}): CI passing
 - ❌ PR #{N} ({issue-id}): CI failing — {details}
 
-### 8. Announce tier boundary
+### 9. Announce tier boundary
 
 Report the tier completion summary:
 
@@ -131,7 +204,7 @@ Next steps:
 2. Run /run-tier {parent-issue-id} to start the next tier
 ```
 
-### 9. Stop
+### 10. Stop
 
 **Do not proceed to the next tier.** The developer will review PRs, merge them, and re-invoke `/run-tier`. This is the **Tier Boundary** — the natural checkpoint where human judgment enters the pipeline.
 

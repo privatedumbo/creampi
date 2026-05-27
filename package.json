@@ -1,0 +1,11 @@
+{
+  "name": "creampi",
+  "version": "0.1.0",
+  "description": "Tier-based parallel agent execution from Linear issues",
+  "keywords": ["pi-package"],
+  "pi": {
+    "extensions": ["extensions/creampi"],
+    "skills": ["skills"],
+    "prompts": ["prompts"]
+  }
+}
