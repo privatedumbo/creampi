@@ -1,20 +1,6 @@
-export interface Issue {
-  id: string;
-  title: string;
-  description: string;
-  type: "AFK" | "HITL";
-  status: "Backlog" | "Todo" | "InProgress" | "Done";
-}
+import type { Issue, BlockingRelation, Tier } from "./types.js";
 
-export interface BlockingRelation {
-  blocker: string;
-  blocked: string;
-}
-
-export interface Tier {
-  afk: Issue[];
-  hitl: Issue[];
-}
+export type { Issue, BlockingRelation, Tier };
 
 export function computeTiers(issues: Issue[], relations: BlockingRelation[]): Tier[] {
   // Filter out Done issues — they don't need to be scheduled
