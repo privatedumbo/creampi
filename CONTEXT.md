@@ -1,0 +1,63 @@
+# Creampi
+
+A personal development toolkit for pi — skills, extensions, and tools. Hosts reusable workflow automation for AI-assisted development.
+
+## Language
+
+**Hard Feature**:
+A feature that requires design decisions which would be costly to reverse. Triggers the full workflow pipeline (grill → PRD → issues → parallel execution).
+_Avoid_: Complex feature, big feature
+
+**Ad-hoc Task**:
+A task where the cost of getting it slightly wrong is just a quick fix. Skips straight to implementation.
+_Avoid_: Simple task, easy task
+
+**Tier**:
+A group of issues in the dependency graph that can execute in parallel. All issues in a tier have their blockers resolved. Tiers execute sequentially; issues within a tier execute concurrently.
+_Avoid_: Batch, wave, phase
+
+**AFK Slice**:
+An issue that can be implemented and merged without human interaction. Agents work these autonomously within a tier.
+_Avoid_: Automated task, auto issue
+
+**HITL Slice**:
+An issue that requires human interaction — an architectural decision, design review, or approval. Pauses the pipeline and notifies the developer.
+_Avoid_: Manual task, human task
+
+**Tier Boundary**:
+The review gate between tiers. The developer reviews and merges all PRs from the completed tier before the next tier starts. This is the natural checkpoint where human judgment enters the autonomous pipeline.
+_Avoid_: Review gate, sync point
+
+**Orchestrator**:
+A long-running TypeScript process that reads the dependency graph from Linear, computes tiers, dispatches pi agents in parallel worktrees via sandcastle, opens PRs, waits for CI, and notifies the developer at tier boundaries.
+_Avoid_: Scheduler, runner, dispatcher
+
+## Example Dialogue
+
+> **Dev:** "I want to build the new billing integration."
+>
+> **Pi:** "That sounds like it could go either way — full pipeline or just knock it out?"
+>
+> **Dev:** "Full pipeline."
+>
+> *Grill session runs, CONTEXT.md and ADRs updated.*
+>
+> **Dev:** "/to-prd"
+>
+> *PRD created as parent Linear issue.*
+>
+> **Dev:** "/to-issues"
+>
+> *Child issues created in Linear with native blocking relations. AFK and HITL slices identified.*
+>
+> **Dev:** `creampi run ENG-42`
+>
+> *Orchestrator reads Linear, computes three tiers. Tier 1 has two AFK slices — dispatches two pi agents in separate worktrees. Both finish, CI green, PRs opened.*
+>
+> **Orchestrator:** "Tier 1 complete. 2 PRs ready for review."
+>
+> *Dev reviews, merges. Orchestrator detects merges, computes tier 2. One HITL slice — pauses and notifies. One AFK slice — dispatches immediately.*
+>
+> **Orchestrator:** "ENG-45 needs your input before proceeding."
+>
+> *Dev resolves the HITL issue. Orchestrator picks up tier 3.*

@@ -1,0 +1,17 @@
+linear:
+  workspace: "beyond-data-consulting"
+  team: "Engineering"
+
+models:
+  worker: "anthropic/claude-sonnet-4"
+  reviewer: "anthropic/claude-opus-4"
+
+workflow:
+  review: true
+  maxReviewRounds: 2
+
+branches:
+  pattern: "feature/{{issue-id}}-{{slug}}"
+
+notify:
+  onTierComplete: true
