@@ -19,6 +19,22 @@ Use these terms precisely (see CONTEXT.md):
 
 ## Process
 
+### 0. Ensure config exists
+
+Check if `.creampi.yaml` exists in the project root. If not, create it with these defaults:
+
+```yaml
+models:
+  worker: "anthropic/claude-sonnet-4"
+  reviewer: "anthropic/claude-opus-4"
+
+workflow:
+  review: true
+  maxReviewRounds: 2
+```
+
+Then read it. Use these values throughout the run.
+
 ### 1. Fetch issues and relations
 
 Call `linear_fetch_issues` with the parent issue ID from `$ARGUMENTS`.
@@ -101,9 +117,9 @@ Run tests before committing. Commit with message prefix '{issue-id}:'.
 
 ### 6. Review workers (optional)
 
-**Skip this step entirely if `workflow.review` is `false` in `.creampi/config.yaml` (or if no config exists and the default is used — check the config first).** When `workflow.review` is `true`, review each worker's output before opening PRs.
+**Skip this step entirely if `workflow.review` is `false` in `.creampi.yaml` (or if no config exists and the default is used — check the config first).** When `workflow.review` is `true`, review each worker's output before opening PRs.
 
-Read `.creampi/config.yaml` to determine `workflow.review` (default: `true`) and `workflow.maxReviewRounds` (default: `2`). Also read `models.reviewer` for the reviewer model.
+Read `.creampi.yaml` to determine `workflow.review` (default: `true`) and `workflow.maxReviewRounds` (default: `2`). Also read `models.reviewer` for the reviewer model.
 
 For each worker that produced commits, run a review loop on that worker's branch:
 
