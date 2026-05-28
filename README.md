@@ -5,7 +5,7 @@ Tier-based parallel agent execution from Linear issues. A [pi](https://github.co
 ## Install
 
 ```bash
-pi install git:github.com/fbocci/creampi
+pi install git:github.com/privatedumbo/creampi
 ```
 
 Requires:
@@ -23,7 +23,7 @@ Design phase (interactive):
 
 Execution phase:
 ```
-/run-tier ENG-42
+/run-tier PROJ-42
 ```
 
 Reads Linear, computes tiers from the dependency graph, dispatches parallel agents in worktrees for AFK slices, pauses for HITL slices, opens PRs, checks CI, stops at the tier boundary for review. Re-run after merging to continue.
