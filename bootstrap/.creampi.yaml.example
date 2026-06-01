@@ -5,3 +5,9 @@ models:
 workflow:
   review: true
   maxReviewRounds: 2
+
+vps:
+  provider: hetzner      # only option today, extensible later
+  region: nbg1            # Hetzner location (default: nbg1)
+  size: cx22              # Hetzner server type (default: cx22)
+  name: creampi-dev       # server name (default: creampi-dev)
