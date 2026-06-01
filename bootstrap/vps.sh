@@ -66,7 +66,7 @@ fi
 ASDF_DIR="${HOME}/.asdf"
 if [[ ! -d "$ASDF_DIR" ]]; then
   echo "📦 Installing asdf"
-  git clone https://github.com/asdf-vm/asdf.git "$ASDF_DIR" --branch v0.16.7
+  git clone https://github.com/asdf-vm/asdf.git "$ASDF_DIR" --branch v0.15.0
 else
   echo "✅ asdf already installed"
 fi
@@ -128,7 +128,8 @@ asdf set --home python "$PYTHON_VERSION"
 # ---------------------------------------------------------------------------
 if ! command -v pi &>/dev/null; then
   echo "📦 Installing pi"
-  npm install -g @anthropic-ai/claude-code
+  npm install -g @earendil-works/pi-coding-agent
+  asdf reshim nodejs
 else
   echo "✅ pi already installed"
 fi
@@ -168,15 +169,18 @@ git config --global "url.https://${GH_TOKEN}@github.com/.insteadOf" "git@github.
 # 8. Pi packages
 # ---------------------------------------------------------------------------
 PI_PACKAGES=(
-  pi-subagents
-  "@alasano/pi-linear"
-  pi-claude-oauth-adapter
+  "npm:pi-subagents"
+  "npm:@alasano/pi-linear"
+  "npm:pi-claude-oauth-adapter"
   "git:github.com/privatedumbo/creampi"
 )
 
 for pkg in "${PI_PACKAGES[@]}"; do
   echo "📦 Installing pi package: ${pkg}"
-  pi install "$pkg" </dev/null || echo "⚠️  Failed to install ${pkg} — may already be installed"
+  if ! pi install "$pkg" </dev/null; then
+    echo "❌ Failed to install pi package: ${pkg}"
+    exit 1
+  fi
 done
 
 echo "✅ Pi packages installed"
