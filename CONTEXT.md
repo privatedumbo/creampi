@@ -36,6 +36,10 @@ _Avoid_: Scheduler, runner, dispatcher
 An idempotent shell script (`bootstrap/vps.sh`) that configures a fresh Ubuntu 24.04 VPS with the full creampi development environment. Takes a `.env` file (secrets and git identity) and a `.creampi.yaml` file (model and workflow preferences) as inputs.
 _Avoid_: Setup script, provisioner, installer
 
+**VPS Provisioning Skill**:
+A pi skill (`/create-vps`) that provisions a Hetzner VPS via `hcloud`, runs the Bootstrap Script on it, and reports the SSH connection string. Goes from "I want a machine" to "SSH in and start working" without leaving pi.
+_Avoid_: Setup wizard, infra skill
+
 ## Example Dialogue
 
 > **Dev:** "I want to build the new billing integration."
