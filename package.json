@@ -7,5 +7,8 @@
     "extensions": ["extensions/creampi"],
     "skills": ["skills"],
     "prompts": ["prompts"]
+  },
+  "dependencies": {
+    "@linear/sdk": "^86.0.0"
   }
 }
