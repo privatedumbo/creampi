@@ -1,0 +1,7 @@
+models:
+  worker: "anthropic/claude-sonnet-4"
+  reviewer: "anthropic/claude-opus-4"
+
+workflow:
+  review: true
+  maxReviewRounds: 2
