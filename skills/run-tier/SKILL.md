@@ -19,9 +19,13 @@ Use these terms precisely (see CONTEXT.md):
 
 ## Process
 
-### 0. Ensure config exists
+### 0. Resolve config
 
-Check if `.creampi.yaml` exists in the project root. If not, create it with these defaults:
+Locate `.creampi.yaml` using this fallback hierarchy (first match wins):
+
+1. **Project root** — `.creampi.yaml` in the current working directory
+2. **Home directory** — `~/.creampi.yaml`
+3. **Hardcoded defaults** — if neither file exists, create `.creampi.yaml` in the project root with these defaults:
 
 ```yaml
 models:
@@ -33,7 +37,9 @@ workflow:
   maxReviewRounds: 2
 ```
 
-Then read it. Use these values throughout the run.
+Only create a new file when neither the project-level nor user-level config exists. When `~/.creampi.yaml` exists, use it directly — do not copy it into the project root.
+
+Read the resolved config. Use these values throughout the run.
 
 ### 1. Fetch issues and relations
 
@@ -102,18 +108,29 @@ Implement {issue-id}: {issue-title}
 - Read docs/adr/ for architectural decisions
 - Read AGENTS.md if it exists for project conventions
 
+## Coding standards
+
+Read the coding standards file at {path-to-CODING_STANDARDS.md} before writing any code. Follow them strictly:
+
+- Use TDD with vertical slices (red-green-refactor, one test at a time)
+- Tests verify behavior through public interfaces, not implementation details
+- Mock only at system boundaries, never your own modules
+- Prefer deep modules: small interface, deep implementation
+- Design for testability: accept dependencies, return results, small surface area
+
 ## Process
 
-Use TDD (red-green-refactor). One test at a time — do not write all tests first.
-
-1. Explore the codebase to understand current state
-2. RED: write one failing test for the next behavior
-3. GREEN: write minimal code to pass
-4. Repeat until acceptance criteria are met
-5. REFACTOR: clean up while all tests pass
+1. Read the coding standards file
+2. Explore the codebase to understand current state
+3. RED: write one failing test for the next behavior
+4. GREEN: write minimal code to pass
+5. Repeat until acceptance criteria are met
+6. REFACTOR: deepen modules, extract duplication — only while GREEN
 
 Run tests before committing. Commit with message prefix '{issue-id}:'.
 ```
+
+`{path-to-CODING_STANDARDS.md}` is the absolute path to `CODING_STANDARDS.md` in the run-tier skill directory (sibling of this `SKILL.md`).
 
 ### 6. Review workers (optional)
 
