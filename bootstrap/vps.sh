@@ -104,7 +104,7 @@ if ! asdf list nodejs 2>/dev/null | grep -q "$NODE_VERSION"; then
 else
   echo "✅ Node.js ${NODE_VERSION} already installed"
 fi
-asdf set --home nodejs "$NODE_VERSION"
+asdf global nodejs "$NODE_VERSION"
 
 # ---------------------------------------------------------------------------
 # 4. Python via asdf
@@ -121,7 +121,7 @@ if ! asdf list python 2>/dev/null | grep -q "$PYTHON_VERSION"; then
 else
   echo "✅ Python ${PYTHON_VERSION} already installed"
 fi
-asdf set --home python "$PYTHON_VERSION"
+asdf global python "$PYTHON_VERSION"
 
 # ---------------------------------------------------------------------------
 # 5. pi
