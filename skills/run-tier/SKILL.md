@@ -19,9 +19,13 @@ Use these terms precisely (see CONTEXT.md):
 
 ## Process
 
-### 0. Ensure config exists
+### 0. Resolve config
 
-Check if `.creampi.yaml` exists in the project root. If not, create it with these defaults:
+Locate `.creampi.yaml` using this fallback hierarchy (first match wins):
+
+1. **Project root** — `.creampi.yaml` in the current working directory
+2. **Home directory** — `~/.creampi.yaml`
+3. **Hardcoded defaults** — if neither file exists, create `.creampi.yaml` in the project root with these defaults:
 
 ```yaml
 models:
@@ -33,7 +37,9 @@ workflow:
   maxReviewRounds: 2
 ```
 
-Then read it. Use these values throughout the run.
+Only create a new file when neither the project-level nor user-level config exists. When `~/.creampi.yaml` exists, use it directly — do not copy it into the project root.
+
+Read the resolved config. Use these values throughout the run.
 
 ### 1. Fetch issues and relations
 
