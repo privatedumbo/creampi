@@ -4,3 +4,4 @@ dist/
 .DS_Store
 .creampi.yaml
 bootstrap/.env
+progress.md
