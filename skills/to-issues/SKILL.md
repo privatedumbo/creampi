@@ -88,29 +88,29 @@ Do NOT close or modify any parent issue.
 
 After all issues are published, set native blocking relations in Linear for every dependency. The "Blocked by" text in the issue body is for human readers; the native relations are what the orchestrator reads to compute **Tiers** deterministically.
 
-For each issue that has a "Blocked by" reference:
+For each issue that has a "Blocked by" reference, call `linear_create_issue_relation`. The `issueId` is the **blocker** and `relatedIssueId` is the **blocked** issue:
 
-```bash
-~/.pi/agent/npm/node_modules/.bin/linear-cli issue save --id <blocked-issue> --blocked-by <blocker-issue>
+```
+linear_create_issue_relation(issueId: "<blocker-issue>", relatedIssueId: "<blocked-issue>", type: "blocks")
 ```
 
 For example, if ENG-102 is blocked by ENG-101:
 
-```bash
-~/.pi/agent/npm/node_modules/.bin/linear-cli issue save --id ENG-102 --blocked-by ENG-101
+```
+linear_create_issue_relation(issueId: "ENG-101", relatedIssueId: "ENG-102", type: "blocks")
 ```
 
-If an issue is blocked by multiple issues, run the command once per blocker:
+If an issue is blocked by multiple issues, call the tool once per blocker:
 
-```bash
-~/.pi/agent/npm/node_modules/.bin/linear-cli issue save --id ENG-103 --blocked-by ENG-101
-~/.pi/agent/npm/node_modules/.bin/linear-cli issue save --id ENG-103 --blocked-by ENG-102
+```
+linear_create_issue_relation(issueId: "ENG-101", relatedIssueId: "ENG-103", type: "blocks")
+linear_create_issue_relation(issueId: "ENG-102", relatedIssueId: "ENG-103", type: "blocks")
 ```
 
 After setting all relations, verify by spot-checking one or two issues:
 
-```bash
-~/.pi/agent/npm/node_modules/.bin/linear-cli issue get --id <issue-id>
+```
+linear_get_issue(issue: "<issue-id>")
 ```
 
-Confirm the `relations` field shows the expected blocking relationships.
+Confirm the relations show the expected blocking relationships.
