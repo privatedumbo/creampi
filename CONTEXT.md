@@ -29,8 +29,12 @@ The review gate between tiers. The developer reviews and merges all PRs from the
 _Avoid_: Review gate, sync point
 
 **Orchestrator**:
-A long-running TypeScript process that reads the dependency graph from Linear, computes tiers, dispatches pi agents in parallel worktrees via sandcastle, opens PRs, waits for CI, and notifies the developer at tier boundaries.
+The pi agent running the `run-tier` skill. Reads the dependency graph from Linear, computes tiers, dispatches parallel agents in worktrees, opens PRs, checks CI, and pauses at tier boundaries for review. Not a standalone process — it runs inside a pi session.
 _Avoid_: Scheduler, runner, dispatcher
+
+**Bootstrap Script**:
+An idempotent shell script (`bootstrap/vps.sh`) that configures a fresh Ubuntu 24.04 VPS with the full creampi development environment. Takes a `.env` file (secrets and git identity) and a `.creampi.yaml` file (model and workflow preferences) as inputs.
+_Avoid_: Setup script, provisioner, installer
 
 ## Example Dialogue
 
@@ -50,13 +54,13 @@ _Avoid_: Scheduler, runner, dispatcher
 >
 > *Child issues created in Linear with native blocking relations. AFK and HITL slices identified.*
 >
-> **Dev:** `creampi run ENG-42`
+> **Dev:** `/run-tier ENG-42`
 >
 > *Orchestrator reads Linear, computes three tiers. Tier 1 has two AFK slices — dispatches two pi agents in separate worktrees. Both finish, CI green, PRs opened.*
 >
 > **Orchestrator:** "Tier 1 complete. 2 PRs ready for review."
 >
-> *Dev reviews, merges. Orchestrator detects merges, computes tier 2. One HITL slice — pauses and notifies. One AFK slice — dispatches immediately.*
+> *Dev reviews, merges, runs `/run-tier ENG-42` again. Orchestrator re-reads Linear, computes tier 2. One HITL slice — pauses and notifies. One AFK slice — dispatches immediately.*
 >
 > **Orchestrator:** "ENG-45 needs your input before proceeding."
 >
