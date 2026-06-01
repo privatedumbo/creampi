@@ -4,7 +4,9 @@
   "description": "Pi extension for tier-based parallel agent execution from Linear issues",
   "type": "module",
   "pi": {
-    "extensions": ["./index.ts"]
+    "extensions": [
+      "./index.ts"
+    ]
   },
   "scripts": {
     "test": "vitest run",
@@ -15,7 +17,10 @@
     "typebox": "*"
   },
   "devDependencies": {
-    "vitest": "^3.2.1",
-    "@types/node": "^22.15.21"
+    "@types/node": "^22.15.21",
+    "vitest": "^3.2.1"
+  },
+  "dependencies": {
+    "@linear/sdk": "^86.0.0"
   }
 }

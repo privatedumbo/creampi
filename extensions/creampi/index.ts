@@ -1,13 +1,13 @@
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import { Type } from "typebox";
 import { LinearClient } from "./linear-client.js";
-import { createLinearCliApi } from "./linear-cli-api.js";
+import { createLinearSdkApi } from "./linear-sdk-api.js";
 import { computeTiers } from "./tier-computer.js";
 import { openPr, checkCi, checkMerge } from "./pr-manager.js";
 
 export default function creampiExtension(pi: ExtensionAPI) {
-  // LinearClient backed by linear-cli
-  const api = createLinearCliApi();
+  // LinearClient backed by @linear/sdk
+  const api = createLinearSdkApi();
   const client = new LinearClient(api);
 
   pi.registerTool({
