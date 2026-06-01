@@ -59,13 +59,12 @@ Verify `hcloud` is authenticated by running:
 hcloud server list
 ```
 
-If it fails with an authentication error, guide the developer through setup:
+If it fails with an authentication error, check whether `HCLOUD_TOKEN` is set in the environment (it may be in the developer's `.env` file). If set, `hcloud` will use it automatically — retry the command.
 
-```bash
-hcloud context create creampi
-```
+If `HCLOUD_TOKEN` is not set and `hcloud` is not authenticated, guide the developer:
 
-This will prompt for a Hetzner Cloud API token. Direct the developer to create one at https://console.hetzner.cloud/ → project → Security → API Tokens.
+1. Create an API token at https://console.hetzner.cloud/ → project → Security → API Tokens
+2. Either set `export HCLOUD_TOKEN=<token>` in their shell, or run `hcloud context create creampi` and paste the token when prompted
 
 Do not proceed until `hcloud server list` succeeds.
 
@@ -156,7 +155,7 @@ If creation fails, report the error and stop.
 Poll until SSH is available on the new server:
 
 ```bash
-ssh -o ConnectTimeout=5 -o StrictHostKeyChecking=no root@{ip} echo ok
+ssh -o ConnectTimeout=5 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null root@{ip} echo ok
 ```
 
 Retry every 5 seconds. Timeout after 2 minutes (24 attempts). If SSH is not available after 2 minutes, report the timeout and stop.
@@ -175,17 +174,24 @@ Locate the config files to upload:
 Upload files to the server:
 
 ```bash
-scp -o StrictHostKeyChecking=no bootstrap/vps.sh root@{ip}:~/vps.sh
-scp -o StrictHostKeyChecking=no .env root@{ip}:~/.env
-scp -o StrictHostKeyChecking=no .creampi.yaml root@{ip}:~/.creampi.yaml
+scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null {path-to-bootstrap/vps.sh} root@{ip}:~/vps.sh
+scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null {path-to-.env} root@{ip}:~/.env
 ```
 
-Use the resolved absolute paths for the local files.
+If a `.creampi.yaml` file was found in step 3 (not using hardcoded defaults), also upload it:
+
+```bash
+scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null {path-to-.creampi.yaml} root@{ip}:~/.creampi.yaml
+```
+
+If no `.creampi.yaml` file exists (step 3 fell through to hardcoded defaults), skip this upload — the bootstrap script treats it as optional.
+
+Use the resolved absolute paths for all local files.
 
 Then run the bootstrap script:
 
 ```bash
-ssh -o StrictHostKeyChecking=no root@{ip} 'bash ~/vps.sh'
+ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null root@{ip} 'bash ~/vps.sh'
 ```
 
 Stream the output so the developer can see progress. If the bootstrap fails, report the error but still report the SSH connection string — the developer may want to debug manually.
