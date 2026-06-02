@@ -1,6 +1,6 @@
 # creampi
 
-A personal development toolkit for [pi](https://github.com/anthropics/pi) — skills, extensions, and prompt templates for tier-based parallel agent execution from Linear issues.
+A personal development toolkit for [pi](https://pi.dev/) — skills, extensions, and prompt templates for tier-based parallel agent execution from Linear issues.
 
 ## Install
 
