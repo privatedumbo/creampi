@@ -71,6 +71,8 @@ Run tier execution on a remote VPS for long-running, unattended workflows. The b
 
    `.env` requires: `ANTHROPIC_API_KEY`, `LINEAR_API_KEY`, `GH_TOKEN`, `GIT_USER_NAME`, `GIT_USER_EMAIL`. Optionally include `HCLOUD_TOKEN` for Hetzner API access.
 
+   > **Note:** The `.env` file is only needed for VPS bootstrap — it transfers secrets to a fresh machine. On your local machine, these variables are typically already in your shell environment and don't need a file.
+
 2. **Upload to the VPS**:
 
    ```bash
