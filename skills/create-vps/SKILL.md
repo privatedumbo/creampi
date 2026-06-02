@@ -1,6 +1,7 @@
 ---
 name: create-vps
-description: Provision a Hetzner VPS via hcloud, run the bootstrap script on it, and report a ready-to-use SSH connection string. Idempotent — safe to re-run at any step.
+description: Provision a Hetzner VPS. Accepts an optional server name (default: `creampi`).
+argument-hint: "<name>"
 ---
 
 # Create VPS
@@ -68,7 +69,13 @@ If `HCLOUD_TOKEN` is not set and `hcloud` is not authenticated, guide the develo
 
 Do not proceed until `hcloud server list` succeeds.
 
-### 3. Read config
+### 3. Resolve name
+
+Read the server name from `$ARGUMENTS` (the first word after `/create-vps`). If no argument is provided, default to `creampi`.
+
+Store the resolved value as `{name}`.
+
+### 4. Read config
 
 Locate `.creampi.yaml` using this fallback hierarchy (first match wins):
 
@@ -83,12 +90,11 @@ vps:
   provider: hetzner
   region: nbg1
   size: cpx22
-  name: creampi-dev
 ```
 
-Store the resolved values: `{name}`, `{region}`, `{size}`.
+Store the resolved values: `{region}`, `{size}`.
 
-### 4. Check SSH key
+### 5. Check SSH key
 
 Check for an existing SSH key:
 
@@ -116,7 +122,7 @@ hcloud ssh-key create --name creampi --public-key-from-file ~/.ssh/id_ed25519.pu
 
 If the key name already exists, skip — do not fail.
 
-### 5. Check for existing server
+### 6. Check for existing server
 
 Check whether a server with the configured name already exists:
 
@@ -127,12 +133,12 @@ hcloud server list --output json
 Parse the JSON output and look for a server whose `name` matches `{name}`. If found:
 
 1. Extract the server's public IPv4 address
-2. Report the connection details (same format as step 9)
+2. Report the connection details (same format as step 10)
 3. **Stop** — do not create a new server
 
-If no match, continue to step 6.
+If no match, continue to step 7.
 
-### 6. Create server
+### 7. Create server
 
 Create the VPS:
 
@@ -150,7 +156,7 @@ Parse the JSON output and extract the server's public IPv4 address as `{ip}`.
 
 If creation fails, report the error and stop.
 
-### 7. Wait for SSH
+### 8. Wait for SSH
 
 Poll until SSH is available on the new server:
 
@@ -160,31 +166,33 @@ ssh -o ConnectTimeout=5 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/n
 
 Retry every 5 seconds. Timeout after 2 minutes (24 attempts). If SSH is not available after 2 minutes, report the timeout and stop.
 
-### 8. Upload and run bootstrap
+### 9. Upload and run bootstrap
 
-Locate the bootstrap files from the installed creampi package. The `bootstrap/` directory is a sibling of the `skills/` directory in the creampi package tree. Resolve the path relative to this skill file:
+Locate the bootstrap files from the installed creampi package. The `bootstrap/` and `dotfiles/` directories are siblings of the `skills/` directory in the creampi package tree. Resolve the paths relative to this skill file:
 
 - `bootstrap/vps.sh` — the bootstrap script (required)
+- `dotfiles/` — shell dotfiles deployed by the bootstrap script (required)
 
 Locate the config files to upload:
 
 - `.env` — from project root, then `~/.env` (required — stop with clear instructions if not found)
-- `.creampi.yaml` — from the same config resolution hierarchy used in step 3
+- `.creampi.yaml` — from the same config resolution hierarchy used in step 4
 
 Upload files to the server:
 
 ```bash
 scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null {path-to-bootstrap/vps.sh} root@{ip}:~/vps.sh
+scp -r -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null {path-to-dotfiles} root@{ip}:~/dotfiles
 scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null {path-to-.env} root@{ip}:~/.env
 ```
 
-If a `.creampi.yaml` file was found in step 3 (not using hardcoded defaults), also upload it:
+If a `.creampi.yaml` file was found in step 4 (not using hardcoded defaults), also upload it:
 
 ```bash
 scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null {path-to-.creampi.yaml} root@{ip}:~/.creampi.yaml
 ```
 
-If no `.creampi.yaml` file exists (step 3 fell through to hardcoded defaults), skip this upload — the bootstrap script treats it as optional.
+If no `.creampi.yaml` file exists (step 4 fell through to hardcoded defaults), skip this upload — the bootstrap script treats it as optional.
 
 Use the resolved absolute paths for all local files.
 
@@ -196,7 +204,7 @@ ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null root@{ip} 'bash 
 
 Stream the output so the developer can see progress. If the bootstrap fails, report the error but still report the SSH connection string — the developer may want to debug manually.
 
-### 9. Report
+### 10. Report
 
 Print the connection details:
 
@@ -212,5 +220,5 @@ Reattach:       ssh root@{ip} -t 'tmux attach -t tier'
 ## Error handling
 
 - Every step checks its precondition before proceeding. If a precondition fails, guide the developer through fixing it rather than silently skipping.
-- The skill is idempotent at every step — safe to re-run if interrupted partway through. Re-running when a server already exists reports the existing server (step 5) rather than failing.
+- The skill is idempotent at every step — safe to re-run if interrupted partway through. Re-running when a server already exists reports the existing server (step 6) rather than failing.
 - Never silently skip errors. Always tell the developer what happened and what to do next.
