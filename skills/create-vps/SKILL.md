@@ -19,9 +19,9 @@ Use these terms precisely (see CONTEXT.md):
 
 | Type | Spec | Price |
 |------|------|-------|
-| cx22 | 2 vCPU / 4 GB | €4.49/mo |
-| cx32 | 4 vCPU / 8 GB | €7.49/mo |
-| cx42 | 8 vCPU / 16 GB | €14.99/mo |
+| cpx22 | 2 vCPU / 4 GB | €7.99/mo |
+| cpx31 | 4 vCPU / 8 GB | €13.99/mo |
+| cpx41 | 8 vCPU / 16 GB | €26.99/mo |
 | cax21 | 4 ARM vCPU / 8 GB | €5.49/mo |
 
 ### Locations
@@ -82,7 +82,7 @@ Read the `vps:` section. Apply these defaults for any missing keys:
 vps:
   provider: hetzner
   region: nbg1
-  size: cx22
+  size: cpx22
   name: creampi-dev
 ```
 
