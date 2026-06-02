@@ -52,7 +52,7 @@ workflow:
 vps:
   provider: hetzner      # only option today
   region: nbg1            # Hetzner location
-  size: cx22              # Hetzner server type
+  size: cpx22             # Hetzner server type
   name: creampi-dev       # server name
 ```
 
@@ -119,7 +119,7 @@ The skill reads VPS settings from the `vps:` section of `.creampi.yaml` (using t
 vps:
   provider: hetzner
   region: nbg1        # Nuremberg, Germany
-  size: cx22          # 2 vCPU / 4 GB — €4.49/mo
+  size: cpx22         # 2 vCPU / 4 GB — €7.99/mo
   name: creampi-dev
 ```
 

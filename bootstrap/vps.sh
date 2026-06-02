@@ -39,7 +39,13 @@ echo "✅ .env loaded"
 # ---------------------------------------------------------------------------
 # 1. System packages
 # ---------------------------------------------------------------------------
-PACKAGES=(git git-lfs tmux curl build-essential)
+PACKAGES=(
+  git git-lfs tmux curl build-essential
+  # Python build dependencies (asdf/pyenv compiles from source)
+  libssl-dev zlib1g-dev libbz2-dev libreadline-dev libsqlite3-dev
+  libncursesw5-dev xz-utils tk-dev libxml2-dev libxmlsec1-dev
+  libffi-dev liblzma-dev
+)
 MISSING=()
 for pkg in "${PACKAGES[@]}"; do
   if ! dpkg -s "$pkg" &>/dev/null; then
@@ -61,7 +67,20 @@ if ! git lfs env &>/dev/null; then
 fi
 
 # ---------------------------------------------------------------------------
-# 2. asdf
+# 2. Git configuration (before any git clone)
+# ---------------------------------------------------------------------------
+echo "🔧 Configuring git"
+git config --global user.name "$GIT_USER_NAME"
+git config --global user.email "$GIT_USER_EMAIL"
+# Rewrite all GitHub URLs to authenticated HTTPS (covers asdf plugins, SSH refs, etc.)
+# Clear any previous insteadOf values first (idempotent)
+git config --global --unset-all "url.https://${GH_TOKEN}@github.com/.insteadOf" 2>/dev/null || true
+git config --global "url.https://${GH_TOKEN}@github.com/.insteadOf" "https://github.com/"
+git config --global --add "url.https://${GH_TOKEN}@github.com/.insteadOf" "git@github.com:"
+echo "✅ Git configured"
+
+# ---------------------------------------------------------------------------
+# 3. asdf
 # ---------------------------------------------------------------------------
 ASDF_DIR="${HOME}/.asdf"
 if [[ ! -d "$ASDF_DIR" ]]; then
@@ -90,7 +109,7 @@ ASDF_BASHRC
 fi
 
 # ---------------------------------------------------------------------------
-# 3. Node.js via asdf
+# 4. Node.js via asdf
 # ---------------------------------------------------------------------------
 NODE_VERSION="25.8.2"
 if ! asdf plugin list 2>/dev/null | grep -q nodejs; then
@@ -107,12 +126,12 @@ fi
 asdf global nodejs "$NODE_VERSION"
 
 # ---------------------------------------------------------------------------
-# 4. Python via asdf
+# 5. Python via asdf
 # ---------------------------------------------------------------------------
 PYTHON_VERSION="3.13.12"
 if ! asdf plugin list 2>/dev/null | grep -q python; then
   echo "📦 Adding asdf python plugin"
-  asdf plugin add python https://github.com/asdf-vm/asdf-python.git
+  asdf plugin add python https://github.com/danhper/asdf-python.git
 fi
 
 if ! asdf list python 2>/dev/null | grep -q "$PYTHON_VERSION"; then
@@ -124,7 +143,7 @@ fi
 asdf global python "$PYTHON_VERSION"
 
 # ---------------------------------------------------------------------------
-# 5. pi
+# 6. pi
 # ---------------------------------------------------------------------------
 if ! command -v pi &>/dev/null; then
   echo "📦 Installing pi"
@@ -135,7 +154,7 @@ else
 fi
 
 # ---------------------------------------------------------------------------
-# 6. gh CLI
+# 7. gh CLI
 # ---------------------------------------------------------------------------
 if ! command -v gh &>/dev/null; then
   echo "📦 Installing gh CLI"
@@ -158,14 +177,6 @@ else
 fi
 
 # ---------------------------------------------------------------------------
-# 7. Git configuration
-# ---------------------------------------------------------------------------
-echo "🔧 Configuring git"
-git config --global user.name "$GIT_USER_NAME"
-git config --global user.email "$GIT_USER_EMAIL"
-git config --global "url.https://${GH_TOKEN}@github.com/.insteadOf" "git@github.com:"
-
-# ---------------------------------------------------------------------------
 # 8. Pi packages
 # ---------------------------------------------------------------------------
 PI_PACKAGES=(
@@ -186,7 +197,7 @@ done
 echo "✅ Pi packages installed"
 
 # ---------------------------------------------------------------------------
-# 9. Matt Pocock's skills
+# 10. Matt Pocock's skills
 # ---------------------------------------------------------------------------
 echo "📦 Installing Matt Pocock's skills"
 npx skills@latest add mattpocock/skills \
@@ -201,7 +212,7 @@ npx skills@latest add mattpocock/skills \
 echo "✅ Matt Pocock's skills installed"
 
 # ---------------------------------------------------------------------------
-# 10. Copy .creampi.yaml to home directory
+# 11. Copy .creampi.yaml to home directory
 # ---------------------------------------------------------------------------
 YAML_FILE="${SCRIPT_DIR}/.creampi.yaml"
 if [[ -f "$YAML_FILE" ]]; then
@@ -212,7 +223,7 @@ else
 fi
 
 # ---------------------------------------------------------------------------
-# 11. Persist environment variables to .bashrc
+# 12. Persist environment variables to .bashrc
 # ---------------------------------------------------------------------------
 persist_env_var() {
   local var_name="$1"
@@ -235,7 +246,7 @@ persist_env_var GH_TOKEN
 echo "✅ Environment variables persisted to .bashrc"
 
 # ---------------------------------------------------------------------------
-# 12. Create projects directory
+# 13. Create projects directory
 # ---------------------------------------------------------------------------
 mkdir -p ~/projects
 echo "✅ ~/projects directory ready"
