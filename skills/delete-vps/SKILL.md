@@ -1,6 +1,6 @@
 ---
 name: delete-vps
-description: Delete a Hetzner VPS by name. Accepts an optional server name (default: `creampi`).
+description: "Delete a Hetzner VPS by name. Accepts an optional server name (default: creampi)."
 argument-hint: "[name]"
 ---
 
