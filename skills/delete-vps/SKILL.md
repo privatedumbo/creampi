@@ -105,3 +105,4 @@ Location: {location}
 - Every step checks its precondition before proceeding. If a precondition fails, guide the developer through fixing it rather than silently skipping.
 - When no server matches the name, report it clearly and stop — this is a no-op, not an error.
 - Never silently skip errors. Always tell the developer what happened and what to do next.
+- The `creampi` SSH key in Hetzner is intentionally left intact after server deletion. It will be reused if a new server is provisioned later.
