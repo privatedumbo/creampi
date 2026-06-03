@@ -287,6 +287,9 @@ else
   echo "✅ zoxide already installed"
 fi
 
+# Ensure ~/.local/bin is on PATH for this session (zoxide installs there)
+export PATH="$HOME/.local/bin:$PATH"
+
 echo "✅ Shell tools installed"
 
 # ---------------------------------------------------------------------------
