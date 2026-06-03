@@ -1,6 +1,6 @@
 ---
 name: create-vps
-description: Provision a Hetzner VPS. Accepts an optional server name (default: `creampi`).
+description: "Provision a Hetzner VPS, bootstrap it, and report an SSH connection string. Accepts an optional server name (default: creampi). Idempotent."
 argument-hint: "<name>"
 ---
 

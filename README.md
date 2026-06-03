@@ -53,7 +53,6 @@ vps:
   provider: hetzner      # only option today
   region: nbg1            # Hetzner location
   size: cpx22             # Hetzner server type
-  name: creampi-dev       # server name
 ```
 
 ## VPS Bootstrap
@@ -106,21 +105,22 @@ Run tier execution on a remote VPS for long-running, unattended workflows. The b
 The `/create-vps` skill automates the entire VPS lifecycle — provision a Hetzner VPS, run the bootstrap script, and get an SSH connection string without leaving pi:
 
 ```
-/create-vps
+/create-vps [name]
 ```
+
+The server name is an optional inline argument (default: `creampi`). For example, `/create-vps staging` creates a server named `staging`.
 
 **Requirements:**
 - `hcloud` CLI installed locally (`brew install hcloud` on macOS)
 - `HCLOUD_TOKEN` environment variable set with a Hetzner Cloud API token
 
-The skill reads VPS settings from the `vps:` section of `.creampi.yaml` (using the same resolution hierarchy described above). Defaults:
+The skill reads VPS infrastructure settings (`region`, `size`) from the `vps:` section of `.creampi.yaml` (using the same resolution hierarchy described above). Defaults:
 
 ```yaml
 vps:
   provider: hetzner
   region: nbg1        # Nuremberg, Germany
   size: cpx22         # 2 vCPU / 4 GB — €7.99/mo
-  name: creampi-dev
 ```
 
 The skill is idempotent — re-running when a server already exists reports the existing server rather than creating a new one.
