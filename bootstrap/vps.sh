@@ -40,7 +40,7 @@ echo "✅ .env loaded"
 # 1. System packages
 # ---------------------------------------------------------------------------
 PACKAGES=(
-  git git-lfs tmux curl build-essential
+  git git-lfs tmux curl build-essential bash-completion
   # Python build dependencies (asdf/pyenv compiles from source)
   libssl-dev zlib1g-dev libbz2-dev libreadline-dev libsqlite3-dev
   libncursesw5-dev xz-utils tk-dev libxml2-dev libxmlsec1-dev
@@ -250,6 +250,89 @@ echo "✅ Environment variables persisted to .bashrc"
 # ---------------------------------------------------------------------------
 mkdir -p ~/projects
 echo "✅ ~/projects directory ready"
+
+# ---------------------------------------------------------------------------
+# 14. Shell tools (starship, eza, fzf, zoxide)
+# ---------------------------------------------------------------------------
+
+# starship prompt
+if ! command -v starship &>/dev/null; then
+  echo "📦 Installing starship"
+  curl -sS https://starship.rs/install.sh | sh -s -- -y
+else
+  echo "✅ starship already installed"
+fi
+
+# eza (modern ls)
+if ! command -v eza &>/dev/null; then
+  echo "📦 Installing eza"
+  sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq eza
+else
+  echo "✅ eza already installed"
+fi
+
+# fzf (fuzzy finder)
+if ! command -v fzf &>/dev/null; then
+  echo "📦 Installing fzf"
+  sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq fzf
+else
+  echo "✅ fzf already installed"
+fi
+
+# zoxide (smart cd)
+if ! command -v zoxide &>/dev/null; then
+  echo "📦 Installing zoxide"
+  curl -sSfL https://raw.githubusercontent.com/ajeetdsouza/zoxide/main/install.sh | sh
+else
+  echo "✅ zoxide already installed"
+fi
+
+# Ensure ~/.local/bin is on PATH for this session (zoxide installs there)
+export PATH="$HOME/.local/bin:$PATH"
+
+echo "✅ Shell tools installed"
+
+# ---------------------------------------------------------------------------
+# 15. Deploy dotfiles
+# ---------------------------------------------------------------------------
+DOTFILES_DIR="${SCRIPT_DIR}/dotfiles"
+
+if [[ -d "$DOTFILES_DIR" ]]; then
+  echo "🔧 Deploying dotfiles"
+
+  # Copy .tmux.conf
+  if [[ -f "${DOTFILES_DIR}/.tmux.conf" ]]; then
+    cp "${DOTFILES_DIR}/.tmux.conf" "$HOME/.tmux.conf"
+    echo "  ✅ .tmux.conf"
+  fi
+
+  # Copy .bashrc.d/
+  if [[ -d "${DOTFILES_DIR}/.bashrc.d" ]]; then
+    mkdir -p "$HOME/.bashrc.d"
+    cp "${DOTFILES_DIR}/.bashrc.d/"*.bash "$HOME/.bashrc.d/"
+    echo "  ✅ .bashrc.d/ scripts"
+  fi
+
+  # Append sourcing loop to .bashrc if not already present
+  if ! grep -q 'Source all .bashrc.d scripts' ~/.bashrc 2>/dev/null; then
+    cat >> ~/.bashrc << 'BASHRC_D'
+
+# Source all .bashrc.d scripts
+if [ -d "$HOME/.bashrc.d" ]; then
+  for f in "$HOME/.bashrc.d"/*.bash; do
+    [ -r "$f" ] && source "$f"
+  done
+fi
+BASHRC_D
+    echo "  ✅ .bashrc.d sourcing loop added"
+  else
+    echo "  ✅ .bashrc.d sourcing loop already present"
+  fi
+
+  echo "✅ Dotfiles deployed"
+else
+  echo "⚠️  dotfiles/ directory not found at ${DOTFILES_DIR} — skipping"
+fi
 
 # ---------------------------------------------------------------------------
 # Done
