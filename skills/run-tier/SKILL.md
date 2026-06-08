@@ -128,6 +128,7 @@ Read the coding standards file at {path-to-CODING_STANDARDS.md} before writing a
 6. REFACTOR: deepen modules, extract duplication — only while GREEN
 
 Run tests before committing. Commit with message prefix '{issue-id}:'.
+After committing, push the branch to origin: `git push -u origin HEAD`.
 ```
 
 `{path-to-CODING_STANDARDS.md}` is the absolute path to `CODING_STANDARDS.md` in the run-tier skill directory (sibling of this `SKILL.md`).
@@ -168,22 +169,27 @@ After the reviewer completes, assess the findings:
 - If there are **blockers or fixes worth doing now** → dispatch a fix worker (step 6c)
 - **Optional/deferred findings** → note them in the tier summary but do not fix
 
-#### 6c. Dispatch fix worker
+#### 6c. Dispatch fix workers
 
-If the reviewer found issues worth fixing, dispatch a forked-context worker on the same branch:
+If reviewers found issues worth fixing, dispatch fix workers for all affected branches in parallel using worktree isolation (same pattern as step 5):
 
 ```typescript
 subagent({
-  agent: "worker",
-  task: `Apply the reviewer's accepted fixes on branch {branch} for issue {issue-id}.
+  tasks: [
+    { agent: "worker", task: `Apply the reviewer's accepted fixes on branch {branch} for issue {issue-id}.
 
 Reviewer findings:
 {synthesized findings — blockers and fixes worth doing now only}
 
-Apply only the fixes listed above. Do not expand scope. Run tests after fixing. Commit with message prefix '{issue-id}: review fixes'.`,
+Apply only the fixes listed above. Do not expand scope. Run tests after fixing. Commit with message prefix '{issue-id}: review fixes'.` },
+    // ... one per branch that needs fixes
+  ],
+  worktree: true,
   async: true
 })
 ```
+
+**Important:** Always use `worktree: true` when dispatching multiple fix workers in parallel. Without worktree isolation, parallel workers race over `git checkout` in the same directory, causing commits on wrong branches or lost work.
 
 #### 6d. Repeat or stop
 
