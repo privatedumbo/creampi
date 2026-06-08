@@ -45,7 +45,9 @@ Read the resolved config. Use these values throughout the run.
 
 Call `linear_fetch_issues` with the parent issue ID from `$ARGUMENTS`.
 
-This returns: the parent issue, all child issues (with AFK/HITL classification and current status), and blocking relations between them.
+This returns: the parent issue, all child issues (with AFK/HITL classification, current status, and `branchName`), and blocking relations between them.
+
+Each issue's `branchName` field contains the Linear-generated branch name (e.g. `eng-608-drop-redundant-current_version-from-agentdetail-response`). This is used in step 5 to name worktree branches so Linear's GitHub integration auto-links PRs to issues.
 
 ### 2. Compute tiers
 
@@ -120,6 +122,8 @@ Read the coding standards file at {path-to-CODING_STANDARDS.md} before writing a
 
 ## Process
 
+0. Rename the worktree branch to the Linear convention: `git checkout -b {branch-name}`
+   (`{branch-name}` is the `branchName` field from the Linear issue response)
 1. Read the coding standards file
 2. Explore the codebase to understand current state
 3. RED: write one failing test for the next behavior
@@ -215,7 +219,7 @@ When the review loop completes cleanly (no remaining blockers), report:
 
 After all workers complete (and reviews pass, if enabled), for each worker that produced commits:
 
-1. Call `open_pr` with the worker's branch name, the issue ID, and the issue title
+1. Call `open_pr` with the issue's Linear branch name (not the worktree-generated name), the issue ID, and the issue title
 2. Call `linear_update_status` to set the issue to "In Review"
 
 If a worker produced no commits or failed, report it but continue with the other workers.
