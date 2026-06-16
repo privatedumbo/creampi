@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{{TITLE}} — Epic Timeline · {{DATE_LABEL}}</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: #ffffff;
+    color: #1a1a2e;
+    padding: 48px;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .container { max-width: 1100px; margin: 0 auto; }
+
+  /* Header */
+  .header { margin-bottom: 48px; }
+  .header h1 { font-size: 24px; font-weight: 700; color: #1a1a2e; letter-spacing: -0.3px; }
+  .header .meta {
+    margin-top: 6px; font-size: 13px; color: #8c8ca1;
+    display: flex; align-items: center; gap: 16px;
+  }
+
+  .health-pill {
+    font-size: 12px; font-weight: 600; padding: 3px 10px; border-radius: 4px;
+  }
+  .health-pill.on-track   { background: #D1FAE5; color: #065F46; }
+  .health-pill.at-risk    { background: #FEF3C7; color: #92400E; }
+  .health-pill.off-track  { background: #FEE2E2; color: #991B1B; }
+
+  /* Chart */
+  .chart { position: relative; margin-bottom: 48px; }
+
+  .row {
+    display: grid; grid-template-columns: 300px 1fr;
+    align-items: center; min-height: 56px;
+  }
+
+  /* Date header */
+  .date-header { display: grid; grid-template-columns: 300px 1fr; margin-bottom: 4px; }
+  .date-strip {
+    display: flex; position: relative; padding-bottom: 8px;
+    border-bottom: 1px solid #E5E5EF;
+  }
+  .month-label {
+    font-size: 12px; font-weight: 600; color: #52526B;
+    position: absolute; top: 0;
+  }
+  .month-label.is-today { color: #4F46E5; }
+
+  /* Week hover overlay — spans full chart height */
+  .week-overlay {
+    position: absolute; top: 0; left: 300px; right: 0; bottom: 0;
+    pointer-events: none; z-index: 5;
+  }
+  .week-hover-col {
+    position: absolute; top: 0; bottom: 0;
+    pointer-events: auto; cursor: default;
+  }
+  .week-hover-col:hover { background: rgba(99,102,241,0.03); }
+  .week-hover-col .week-tooltip {
+    display: none; position: absolute; top: 4px; left: 50%;
+    transform: translateX(-50%); white-space: nowrap;
+    font-size: 11px; font-weight: 500; color: #fff;
+    background: #1a1a2e; padding: 3px 8px; border-radius: 4px;
+    pointer-events: none; z-index: 10;
+  }
+  .week-hover-col:hover .week-tooltip { display: block; }
+
+  /* Project group header */
+  .project-header {
+    display: grid; grid-template-columns: 300px 1fr;
+    align-items: center; min-height: 36px;
+    border-top: 1px solid #E5E5EF;
+  }
+  .project-header:first-child { border-top: none; }
+  .project-name {
+    font-size: 11px; font-weight: 600; text-transform: uppercase;
+    letter-spacing: 0.6px; color: #8c8ca1; padding: 12px 0 4px;
+  }
+
+  /* Epic rows */
+  .epic-row { border-bottom: 1px solid #F3F3F8; }
+  .epic-row:last-child { border-bottom: none; }
+
+  .label-cell { padding: 14px 0; padding-right: 24px; }
+  .epic-title { font-size: 14px; font-weight: 600; color: #1a1a2e; line-height: 1.3; margin-bottom: 3px; }
+  .epic-detail {
+    font-size: 12px; color: #8c8ca1;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .avatar {
+    width: 18px; height: 18px; border-radius: 50%;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: 8px; font-weight: 700; color: #fff; flex-shrink: 0;
+  }
+  .sep { color: #D1D1DB; }
+
+  /* Timeline cell */
+  .timeline-cell { position: relative; height: 56px; display: flex; align-items: center; }
+
+  .vline { position: absolute; top: 0; bottom: 0; width: 1px; background: #F3F3F8; z-index: 0; }
+  .today-line {
+    position: absolute; top: -4px; bottom: 0; width: 1.5px;
+    background: #4F46E5; z-index: 3; border-radius: 1px;
+  }
+
+  /* Bar */
+  .bar {
+    position: absolute; height: 28px; border-radius: 6px; z-index: 2;
+    display: flex; align-items: center; padding: 0 10px;
+    font-size: 11px; font-weight: 500; overflow: hidden;
+    cursor: default; transition: box-shadow 0.15s;
+  }
+  .bar:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+
+  .bar-inner-label {
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    position: relative; z-index: 1;
+  }
+  .bar-fill {
+    position: absolute; left: 0; top: 0; bottom: 0;
+    border-radius: 6px; z-index: 0;
+  }
+
+  /* Status styles */
+  .bar.complete    { background: #DBEAFE; border: 1.5px solid #60A5FA; color: #1E40AF; }
+  .bar.on-track    { background: #D1FAE5; border: 1.5px solid #34D399; color: #065F46; }
+  .bar.on-track    .bar-fill { background: #A7F3D0; }
+  .bar.at-risk     { background: #FEF3C7; border: 1.5px solid #F59E0B; color: #92400E; }
+  .bar.at-risk     .bar-fill { background: #FDE68A; }
+  .bar.off-track   { background: #FEE2E2; border: 1.5px solid #F87171; color: #991B1B; }
+  .bar.off-track   .bar-fill { background: #FECACA; }
+  .bar.not-started { background: #F3F4F6; border: 1.5px dashed #9CA3AF; color: #6B7280; }
+
+  /* Legend */
+  .legend { display: flex; gap: 24px; margin-bottom: 40px; flex-wrap: wrap; }
+  .legend-item { display: flex; align-items: center; gap: 8px; font-size: 12px; color: #6B7280; }
+  .legend-swatch { width: 24px; height: 12px; border-radius: 3px; }
+  .legend-swatch.green  { background: #D1FAE5; border: 1.5px solid #34D399; }
+  .legend-swatch.yellow { background: #FEF3C7; border: 1.5px solid #F59E0B; }
+  .legend-swatch.red    { background: #FEE2E2; border: 1.5px solid #F87171; }
+  .legend-swatch.blue   { background: #DBEAFE; border: 1.5px solid #60A5FA; }
+  .legend-swatch.gray   { background: #F3F4F6; border: 1.5px dashed #9CA3AF; }
+  .legend-line { width: 16px; height: 2px; background: #4F46E5; border-radius: 1px; }
+
+  /* Owners table */
+  .owners {
+    border: 1px solid #E5E5EF; border-radius: 10px;
+    overflow: hidden; margin-bottom: 32px;
+  }
+  .owners-title {
+    font-size: 11px; font-weight: 600; text-transform: uppercase;
+    letter-spacing: 0.6px; color: #8c8ca1; background: #FAFAFC;
+    border-bottom: 1px solid #E5E5EF;
+  }
+  .owners-table {
+    width: 100%; border-collapse: collapse;
+  }
+  .owners-table thead th {
+    font-size: 11px; font-weight: 600; text-transform: uppercase;
+    letter-spacing: 0.6px; color: #8c8ca1; padding: 12px 20px;
+    background: #FAFAFC; border-bottom: 1px solid #E5E5EF;
+    text-align: left;
+  }
+  .owners-table thead th:last-child { text-align: right; }
+  .owners-table tbody tr { border-bottom: 1px solid #F3F3F8; }
+  .owners-table tbody tr:last-child { border-bottom: none; }
+  .owners-table tbody tr:hover { background: #FAFAFC; }
+  .owners-table tbody tr.owner-group-first td { padding-top: 14px; }
+  .owners-table tbody tr.owner-group-last td { padding-bottom: 14px; }
+  .owners-table tbody tr.owner-group-last { border-bottom: 1px solid #E5E5EF; }
+  .owners-table tbody tr:last-child { border-bottom: none; }
+  .owners-table td {
+    padding: 6px 20px; font-size: 13px; vertical-align: middle;
+  }
+  .owner-name-cell {
+    display: flex; align-items: center; gap: 10px;
+    font-weight: 600; color: #1a1a2e; white-space: nowrap;
+  }
+  .owner-epics-cell { color: #52526B; }
+  .owner-due-cell { text-align: right; color: #8c8ca1; font-size: 12px; white-space: nowrap; }
+  .epic-tag {
+    display: inline-flex; align-items: center; gap: 5px;
+    font-size: 13px;
+  }
+  .dot { width: 7px; height: 7px; border-radius: 2px; display: inline-block; flex-shrink: 0; }
+  .dot.g  { background: #34D399; }
+  .dot.y  { background: #F59E0B; }
+  .dot.r  { background: #F87171; }
+  .dot.b  { background: #60A5FA; }
+  .dot.gr { background: #9CA3AF; }
+
+  /* Footer */
+  .footer {
+    font-size: 11px; color: #B0B0C0;
+    display: flex; justify-content: space-between;
+  }
+
+  @media print {
+    body { padding: 24px; }
+    .bar:hover { box-shadow: none; }
+  }
+</style>
+</head>
+<body>
+<!--
+  TEMPLATE — gantt-template.html
+  ==============================
+  The agent populates this by setting the DATA object in the <script> block
+  and filling in the header/owners HTML. The CSS and rendering logic stay fixed.
+
+  DATA shape:
+  {
+    title: string,              // "Wisner" or "Ergo Initiative"
+    subtitle: string,           // "Ergo Initiative" or ""
+    date: string,               // "June 11, 2026"
+    today: string,              // "2026-06-11" (ISO)
+    health: string,             // "on-track" | "at-risk" | "off-track"
+    healthLabel: string,        // "🟢 On track" | "🟡 At risk" | "🔴 Off track"
+    rangeStart: string,         // ISO date, ~2 days before earliest start
+    rangeEnd: string,           // ISO date, ~3 days after latest due
+    source: string,             // "Source: Linear · Project Wisner"
+    epics: [
+      {
+        name: string,
+        owner: string,
+        initials: string,
+        color: string,          // hex for avatar
+        start: string,          // ISO date (startedAt or createdAt)
+        due: string,            // ISO date
+        progress: number,       // 0-100 percentage
+        label: string,          // "1 / 3 done" or "In progress"
+        status: string,         // "complete"|"on-track"|"at-risk"|"off-track"|"not-started"
+        project: string,        // project name (used for grouping in initiative mode)
+      }
+    ]
+  }
+-->
+<div class="container">
+
+  <div class="header">
+    <h1 id="hdr-title"></h1>
+    <div class="meta" id="hdr-meta"></div>
+  </div>
+
+  <div class="legend">
+    <div class="legend-item"><div class="legend-swatch green"></div> On track</div>
+    <div class="legend-item"><div class="legend-swatch yellow"></div> At risk</div>
+    <div class="legend-item"><div class="legend-swatch red"></div> Off track</div>
+    <div class="legend-item"><div class="legend-swatch blue"></div> Complete</div>
+    <div class="legend-item"><div class="legend-swatch gray"></div> Not started</div>
+    <div class="legend-item"><div class="legend-line"></div> Today</div>
+  </div>
+
+  <div class="chart" id="chart"></div>
+  <div id="owners-container"></div>
+
+  <div class="footer">
+    <span id="footer-source"></span>
+    <span id="footer-generated"></span>
+  </div>
+
+</div>
+
+<script>
+// ── DATA — the agent replaces this block with real values ──
+const DATA = {{DATA_JSON}};
+// ── END DATA ──
+
+const RANGE_START = parseLocal(DATA.rangeStart);
+const RANGE_END   = parseLocal(DATA.rangeEnd);
+const TOTAL_DAYS  = (RANGE_END - RANGE_START) / 864e5;
+
+// Parse ISO date string as local (not UTC) to avoid timezone shift
+function parseLocal(s){ const [y,m,d] = s.split('-').map(Number); return new Date(y, m-1, d); }
+
+function dayOff(d){ return ((typeof d === 'string' ? parseLocal(d) : d) - RANGE_START) / 864e5; }
+function pct(d){ return (d / TOTAL_DAYS * 100); }
+
+function weekTicks(){
+  const out = [], d = new Date(RANGE_START);
+  while(d <= RANGE_END){ out.push(new Date(d)); d.setDate(d.getDate()+7); }
+  return out;
+}
+
+function monthTicks(){
+  const out = [];
+  let d = new Date(RANGE_START.getFullYear(), RANGE_START.getMonth(), 1);
+  while(d <= RANGE_END){
+    if(d >= RANGE_START) out.push(new Date(d));
+    d = new Date(d.getFullYear(), d.getMonth()+1, 1);
+  }
+  return out;
+}
+
+function fmtDate(iso){ return parseLocal(iso).toLocaleDateString('en-US',{month:'short',day:'numeric'}); }
+
+// Header
+document.getElementById('hdr-title').textContent = DATA.title + ' — Epic Timeline';
+const meta = document.getElementById('hdr-meta');
+const parts = [];
+if(DATA.subtitle) parts.push(`<span>${DATA.subtitle}</span><span class="sep">·</span>`);
+parts.push(`<span>${DATA.date}</span><span class="sep">·</span>`);
+parts.push(`<span class="health-pill ${DATA.health}">${DATA.healthLabel}</span>`);
+meta.innerHTML = parts.join('');
+
+// Footer
+document.getElementById('footer-source').textContent = DATA.source;
+document.getElementById('footer-generated').textContent = 'Generated ' + DATA.date;
+
+// Chart
+const chart = document.getElementById('chart');
+const ticks = weekTicks();
+
+// Date header — month labels only
+const months = monthTicks();
+const dh = document.createElement('div');
+dh.className = 'date-header';
+const todayDate = parseLocal(DATA.today);
+
+const monthLabelsHTML = months.map(m => {
+  const off = pct(dayOff(m));
+  const isT = m.getMonth() === todayDate.getMonth() && m.getFullYear() === todayDate.getFullYear();
+  return `<div class="month-label${isT?' is-today':''}" style="left:${off}%">
+    ${m.toLocaleDateString('en-US',{month:'short'})}</div>`;
+}).join('');
+
+dh.innerHTML = `<div></div><div class="date-strip">${monthLabelsHTML}</div>`;
+chart.appendChild(dh);
+
+// Week hover overlay — spans full chart, shows week range with day names
+function fmtDayDate(d){ return d.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'}); }
+const overlay = document.createElement('div');
+overlay.className = 'week-overlay';
+overlay.innerHTML = ticks.map((t, i) => {
+  const off = pct(dayOff(t));
+  const nextOff = i < ticks.length-1 ? pct(dayOff(ticks[i+1])) : 100;
+  const w = nextOff - off;
+  const fri = new Date(t); fri.setDate(fri.getDate() + 4);
+  const label = `${fmtDayDate(t)} → ${fmtDayDate(fri)}`;
+  return `<div class="week-hover-col" style="left:${off}%;width:${w}%"><div class="week-tooltip">${label}</div></div>`;
+}).join('');
+chart.appendChild(overlay);
+
+// Group by project
+const projects = {};
+DATA.epics.forEach(e => {
+  const p = e.project || '_';
+  if(!projects[p]) projects[p] = [];
+  projects[p].push(e);
+});
+const projectNames = Object.keys(projects);
+const multiProject = projectNames.length > 1 || (projectNames.length === 1 && projectNames[0] !== '_');
+
+projectNames.forEach(pName => {
+  // Project group header (only in initiative / multi-project mode)
+  if(multiProject) {
+    const ph = document.createElement('div');
+    ph.className = 'project-header';
+    ph.innerHTML = `<div class="project-name">${pName}</div><div></div>`;
+    chart.appendChild(ph);
+  }
+
+  projects[pName].forEach(e => {
+    const row = document.createElement('div');
+    row.className = 'row epic-row';
+    const startPct = pct(dayOff(e.start));
+    const widthPct = Math.max(pct(dayOff(e.due) - dayOff(e.start)), 2);
+    const todayPct = pct(dayOff(DATA.today));
+    const dueFmt = fmtDate(e.due);
+
+    row.innerHTML = `
+      <div class="label-cell">
+        <div class="epic-title">${e.name}</div>
+        <div class="epic-detail">
+          <span class="avatar" style="background:${e.color}">${e.initials}</span>
+          ${e.owner}<span class="sep">·</span>${e.label}
+        </div>
+      </div>
+      <div class="timeline-cell">
+        ${ticks.map(t => `<div class="vline" style="left:${pct(dayOff(t))}%"></div>`).join('')}
+        <div class="today-line" style="left:${todayPct}%"></div>
+        <div class="bar ${e.status}" style="left:${startPct}%;width:${widthPct}%"
+             title="${e.name}\n${e.owner}\nDue: ${dueFmt}\n${e.label}">
+          ${e.progress > 0 ? `<div class="bar-fill" style="width:${e.progress}%"></div>` : ''}
+          <span class="bar-inner-label">${e.label}</span>
+        </div>
+      </div>`;
+    chart.appendChild(row);
+  });
+});
+
+// Owners
+const ownerMap = {};
+DATA.epics.forEach(e => {
+  if(!ownerMap[e.owner]) ownerMap[e.owner] = { initials: e.initials, color: e.color, epics: [] };
+  const dotClass = {complete:'b','on-track':'g','at-risk':'y','off-track':'r','not-started':'gr'}[e.status]||'gr';
+  const dueFmt = fmtDate(e.due);
+  ownerMap[e.owner].epics.push({ name: e.name, dotClass, dueFmt });
+});
+
+const oc = document.getElementById('owners-container');
+let ownerHTML = `<div class="owners">
+<table class="owners-table">
+<thead><tr><th>Owner</th><th>Epic</th><th>Due</th></tr></thead>
+<tbody>`;
+Object.entries(ownerMap).forEach(([name, o]) => {
+  o.epics.forEach((ep, i) => {
+    const isFirst = i === 0;
+    const isLast = i === o.epics.length - 1;
+    const classes = [isFirst ? 'owner-group-first' : '', isLast ? 'owner-group-last' : ''].filter(Boolean).join(' ');
+    ownerHTML += `<tr${classes ? ' class="'+classes+'"' : ''}>
+      <td>${isFirst ? `<div class="owner-name-cell"><div class="avatar" style="background:${o.color}">${o.initials}</div>${name}</div>` : ''}</td>
+      <td class="owner-epics-cell"><span class="epic-tag"><span class="dot ${ep.dotClass}"></span>${ep.name}</span></td>
+      <td class="owner-due-cell">${ep.dueFmt}</td>
+    </tr>`;
+  });
+});
+ownerHTML += '</tbody></table></div>';
+oc.innerHTML = ownerHTML;
+</script>
+</body>
+</html>

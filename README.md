@@ -14,12 +14,19 @@ Requires:
 
 ## Usage
 
-### Design phase (interactive)
+### First-time setup
 
 ```
-/grill-with-docs  → stress-test plan, update CONTEXT.md + ADRs
-/to-prd           → publish PRD as parent Linear issue
-/to-issues        → break into AFK/HITL slices with blocking relations
+/setup-privatedumbo-skills  → scaffold docs/agents/ config (tracker, labels, ways of working)
+```
+
+### Planning phase (Linear, end to end)
+
+```
+/to-epic          → create a time-bound Epic (labeled parent issue)
+/to-prd           → publish a PRD as a parent Linear issue
+/to-issues        → break a plan into AFK/HITL vertical slices with blocking relations
+/to-briefing      → generate a stakeholder status update with a Gantt timeline
 ```
 
 ### Execution phase
@@ -52,20 +59,20 @@ workflow:
 vps:
   provider: hetzner      # only option today
   region: nbg1            # Hetzner location
-  size: cpx22             # Hetzner server type
+  size: cx22              # Hetzner server type
 ```
 
 ## VPS Bootstrap
 
-Run tier execution on a remote VPS for long-running, unattended workflows. The bootstrap script (`bootstrap/vps.sh`) is idempotent — it configures a fresh Ubuntu 24.04 VPS with the full creampi development environment.
+Run tier execution on a remote VPS for long-running, unattended workflows. The bootstrap script (`vps/vps.sh`) is idempotent — it configures a fresh Ubuntu 24.04 VPS with the full creampi development environment.
 
 ### Manual workflow
 
 1. **Prepare config files** — copy the examples and fill in your values:
 
    ```bash
-   cp bootstrap/.env.example .env
-   cp bootstrap/.creampi.yaml.example .creampi.yaml
+   cp vps/.env.example .env
+   cp vps/.creampi.yaml.example .creampi.yaml
    ```
 
    `.env` requires: `ANTHROPIC_API_KEY`, `LINEAR_API_KEY`, `GH_TOKEN`, `GIT_USER_NAME`, `GIT_USER_EMAIL`. Optionally include `HCLOUD_TOKEN` for Hetzner API access.
@@ -75,7 +82,8 @@ Run tier execution on a remote VPS for long-running, unattended workflows. The b
 2. **Upload to the VPS**:
 
    ```bash
-   scp bootstrap/vps.sh .env .creampi.yaml root@<vps-ip>:~/
+   scp vps/vps.sh .env .creampi.yaml root@<vps-ip>:~/
+   scp -r vps/dotfiles root@<vps-ip>:~/dotfiles
    ```
 
 3. **SSH in and run the bootstrap**:
@@ -120,7 +128,7 @@ The skill reads VPS infrastructure settings (`region`, `size`) from the `vps:` s
 vps:
   provider: hetzner
   region: nbg1        # Nuremberg, Germany
-  size: cpx22         # 2 vCPU / 4 GB — €7.99/mo
+  size: cx22          # 2 vCPU / 4 GB RAM (Hetzner CX22)
 ```
 
 The skill is idempotent — re-running when a server already exists reports the existing server rather than creating a new one.
@@ -131,14 +139,20 @@ The skill is idempotent — re-running when a server already exists reports the 
 creampi/
 ├── extensions/creampi/   # pi extension — Linear SDK tools for the agent
 ├── skills/               # pi skills
+│   ├── setup-privatedumbo-skills/ # /setup-privatedumbo-skills — scaffold docs/agents/ config
+│   ├── to-epic/          #   /to-epic — create a time-bound Epic
+│   ├── to-prd/           #   /to-prd — publish a PRD as a parent issue
+│   ├── to-issues/        #   /to-issues — break plans into Linear issues
+│   ├── to-briefing/      #   /to-briefing — stakeholder status update + Gantt
 │   ├── create-vps/       #   /create-vps — provision a Hetzner VPS
-│   ├── run-tier/         #   /run-tier — execute the next unblocked tier
-│   └── to-issues/        #   /to-issues — break plans into Linear issues
+│   ├── delete-vps/       #   /delete-vps — tear down a Hetzner VPS
+│   └── run-tier/         #   /run-tier — execute the next unblocked tier
 ├── prompts/              # prompt templates for agent workflows
-├── bootstrap/            # VPS bootstrap script and config examples
-│   ├── vps.sh            #   idempotent Ubuntu 24.04 setup
+├── vps/                  # VPS provisioning (bootstrap + dotfiles)
+│   ├── vps.sh            #   idempotent Ubuntu 24.04 bootstrap
 │   ├── .env.example      #   secrets template
-│   └── .creampi.yaml.example  # config template
+│   ├── .creampi.yaml.example  # config template
+│   └── dotfiles/         #   shell config deployed by the bootstrap
 ├── docs/adr/             # architectural decision records
 └── CONTEXT.md            # domain vocabulary and project conventions
 ```

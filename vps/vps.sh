@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
-# bootstrap/vps.sh — Idempotent bootstrap for a fresh Ubuntu 24.04 VPS.
+# vps/vps.sh — Idempotent bootstrap for a fresh Ubuntu 24.04 VPS.
 # Configures the machine as a fully functional creampi development environment.
 #
 # Usage:
-#   scp bootstrap/vps.sh .env .creampi.yaml user@vps:~/
+#   scp vps/vps.sh .env .creampi.yaml user@vps:~/
+#   scp -r vps/dotfiles user@vps:~/dotfiles
 #   ssh user@vps
 #   bash vps.sh
 #
