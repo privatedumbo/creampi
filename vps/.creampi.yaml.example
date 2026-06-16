@@ -9,4 +9,4 @@ workflow:
 vps:
   provider: hetzner      # only option today, extensible later
   region: nbg1            # Hetzner location (default: nbg1)
-  size: cx22              # Hetzner server type (default: cx22)
+  size: cx22              # Hetzner server type (default: cx22 — 2 vCPU / 4 GB)

@@ -12,7 +12,7 @@ Provision a Hetzner VPS, bootstrap it with the creampi development environment, 
 
 Use these terms precisely (see CONTEXT.md):
 
-- **Bootstrap Script** — the idempotent `bootstrap/vps.sh` that configures a fresh Ubuntu 24.04 VPS
+- **Bootstrap Script** — the idempotent `vps/vps.sh` that configures a fresh Ubuntu 24.04 VPS
 
 ## Reference
 
@@ -20,10 +20,12 @@ Use these terms precisely (see CONTEXT.md):
 
 | Type | Spec | Price |
 |------|------|-------|
-| cpx22 | 2 vCPU / 4 GB | €7.99/mo |
-| cpx31 | 4 vCPU / 8 GB | €13.99/mo |
-| cpx41 | 8 vCPU / 16 GB | €26.99/mo |
-| cax21 | 4 ARM vCPU / 8 GB | €5.49/mo |
+| cx22 | 2 vCPU / 4 GB | ~€4.59/mo |
+| cpx31 | 4 vCPU / 8 GB | ~€13.99/mo |
+| cpx41 | 8 vCPU / 16 GB | ~€26.99/mo |
+| cax21 | 4 ARM vCPU / 8 GB | ~€5.49/mo |
+
+> Prices are indicative — check Hetzner for current rates.
 
 ### Locations
 
@@ -89,7 +91,7 @@ Read the `vps:` section. Apply these defaults for any missing keys:
 vps:
   provider: hetzner
   region: nbg1
-  size: cpx22
+  size: cx22
 ```
 
 Store the resolved values: `{region}`, `{size}`.
@@ -168,10 +170,10 @@ Retry every 5 seconds. Timeout after 2 minutes (24 attempts). If SSH is not avai
 
 ### 9. Upload and run bootstrap
 
-Locate the bootstrap files from the installed creampi package. The `bootstrap/` and `dotfiles/` directories are siblings of the `skills/` directory in the creampi package tree. Resolve the paths relative to this skill file:
+Locate the bootstrap files from the installed creampi package. The `vps/` directory is a sibling of the `skills/` directory in the creampi package tree. Resolve the paths relative to this skill file:
 
-- `bootstrap/vps.sh` — the bootstrap script (required)
-- `dotfiles/` — shell dotfiles deployed by the bootstrap script (required)
+- `vps/vps.sh` — the bootstrap script (required)
+- `vps/dotfiles/` — shell dotfiles deployed by the bootstrap script (required)
 
 Locate the config files to upload:
 
@@ -181,8 +183,8 @@ Locate the config files to upload:
 Upload files to the server:
 
 ```bash
-scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null {path-to-bootstrap/vps.sh} root@{ip}:~/vps.sh
-scp -r -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null {path-to-dotfiles} root@{ip}:~/dotfiles
+scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null {path-to-vps/vps.sh} root@{ip}:~/vps.sh
+scp -r -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null {path-to-vps/dotfiles} root@{ip}:~/dotfiles
 scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null {path-to-.env} root@{ip}:~/.env
 ```
 

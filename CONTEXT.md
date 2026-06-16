@@ -33,7 +33,7 @@ The pi agent running the `run-tier` skill. Reads the dependency graph from Linea
 _Avoid_: Scheduler, runner, dispatcher
 
 **Bootstrap Script**:
-An idempotent shell script (`bootstrap/vps.sh`) that configures a fresh Ubuntu 24.04 VPS with the full creampi development environment. Takes a `.env` file (secrets and git identity) and a `.creampi.yaml` file (model and workflow preferences) as inputs.
+An idempotent shell script (`vps/vps.sh`) that configures a fresh Ubuntu 24.04 VPS with the full creampi development environment. Takes a `.env` file (secrets and git identity) and a `.creampi.yaml` file (model and workflow preferences) as inputs.
 _Avoid_: Setup script, provisioner, installer
 
 **VPS Provisioning Skill**:

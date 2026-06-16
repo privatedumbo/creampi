@@ -3,23 +3,43 @@ name: to-issues
 description: Break a plan, spec, or PRD into independently-grabbable issues on the project issue tracker using tracer-bullet vertical slices, with native Linear blocking relations. Use when user wants to convert a plan into issues, create implementation tickets, or break down work into issues.
 ---
 
+<!--
+  Based on https://github.com/mattpocock/skills (skills/engineering/to-issues)
+  Original author: Matt Pocock — MIT License
+  See THIRD-PARTY-NOTICES.md for the full license text.
+  Modifications: added Section 7 (Linear blocking relations for tier orchestration);
+  added setup section pointing to docs/agents/ configuration; minor wording tweaks.
+-->
+
 # To Issues
 
 Break a plan into independently-grabbable issues using vertical slices (tracer bullets).
 
-The issue tracker and triage label vocabulary should have been provided to you — run `/setup-matt-pocock-skills` if not.
+## Setup
+
+Before first use, run `/setup-privatedumbo-skills` to configure the issue tracker, labels, and project for this repo. The skill reads configuration from `docs/agents/`:
+
+- `docs/agents/issue-tracker.md` — tracker type, team, project
+- `docs/agents/labels.md` — triage label vocabulary
+- `docs/agents/ways-of-working.md` — Epic/Issue model
+
+If `docs/agents/` does not exist, tell the user to run `/setup-privatedumbo-skills` first.
 
 ## Process
 
-### 1. Gather context
+### 1. Read configuration
+
+Read `docs/agents/issue-tracker.md` for the tracker, team, and project. Read `docs/agents/labels.md` for the triage label to apply to AFK slices. Read `docs/agents/ways-of-working.md` for the Epic/Issue vocabulary.
+
+### 2. Gather context
 
 Work from whatever is already in the conversation context. If the user passes an issue reference (issue number, URL, or path) as an argument, fetch it from the issue tracker and read its full body and comments.
 
-### 2. Explore the codebase (optional)
+### 3. Explore the codebase (optional)
 
-If you have not already explored the codebase, do so to understand the current state of the code. Issue titles and descriptions should use the project's domain glossary vocabulary, and respect ADRs in the area you're touching.
+If you have not already explored the codebase, do so to understand the current state of the code. Issue titles and descriptions should use the project's domain glossary vocabulary (check for `CONTEXT.md` and `docs/adr/` — location noted in `docs/agents/ways-of-working.md`), and respect ADRs in the area you're touching.
 
-### 3. Draft vertical slices
+### 4. Draft vertical slices
 
 Break the plan into **tracer bullet** issues. Each issue is a thin vertical slice that cuts through ALL integration layers end-to-end, NOT a horizontal slice of one layer.
 
@@ -31,7 +51,7 @@ Slices may be 'HITL' or 'AFK'. HITL slices require human interaction, such as an
 - Prefer many thin slices over few thick ones
 </vertical-slice-rules>
 
-### 4. Quiz the user
+### 5. Quiz the user
 
 Present the proposed breakdown as a numbered list. For each slice, show:
 
@@ -49,9 +69,11 @@ Ask the user:
 
 Iterate until the user approves the breakdown.
 
-### 5. Publish the issues to the issue tracker
+### 6. Publish the issues to the issue tracker
 
-For each approved slice, publish a new issue to the issue tracker. Use the issue body template below. These issues are considered ready for AFK agents, so publish them with the correct triage label unless instructed otherwise.
+For each approved slice, publish a new issue to the issue tracker using the project and team from `docs/agents/issue-tracker.md`. Apply the triage label from `docs/agents/labels.md` (typically `ready-for-agent` for AFK slices) unless instructed otherwise.
+
+If the source is an Epic (parent issue labeled `epic` per `docs/agents/labels.md`), set `parentId` on every created issue so they appear as children of the Epic.
 
 Publish issues in dependency order (blockers first) so you can reference real issue identifiers in the "Blocked by" field.
 
@@ -82,35 +104,10 @@ Or "None - can start immediately" if no blockers.
 
 Do NOT close or modify any parent issue.
 
-### 6. Set native blocking relations in Linear
+### 7. Set native blocking relations
 
-**This step is critical for the orchestrator's tier computation (see ADR-0003).**
+After all issues are published, set native blocking relations for every dependency. The "Blocked by" text in the issue body is for human readers; the native relations are what the orchestrator reads to compute tiers deterministically.
 
-After all issues are published, set native blocking relations in Linear for every dependency. The "Blocked by" text in the issue body is for human readers; the native relations are what the orchestrator reads to compute **Tiers** deterministically.
+For each issue that has a "Blocked by" reference, create a blocking relation. The blocker issue blocks the dependent issue.
 
-For each issue that has a "Blocked by" reference, call `linear_create_issue_relation`. The `issueId` is the **blocker** and `relatedIssueId` is the **blocked** issue:
-
-```
-linear_create_issue_relation(issueId: "<blocker-issue>", relatedIssueId: "<blocked-issue>", type: "blocks")
-```
-
-For example, if ENG-102 is blocked by ENG-101:
-
-```
-linear_create_issue_relation(issueId: "ENG-101", relatedIssueId: "ENG-102", type: "blocks")
-```
-
-If an issue is blocked by multiple issues, call the tool once per blocker:
-
-```
-linear_create_issue_relation(issueId: "ENG-101", relatedIssueId: "ENG-103", type: "blocks")
-linear_create_issue_relation(issueId: "ENG-102", relatedIssueId: "ENG-103", type: "blocks")
-```
-
-After setting all relations, verify by spot-checking one or two issues:
-
-```
-linear_get_issue(issue: "<issue-id>")
-```
-
-Confirm the relations show the expected blocking relationships.
+After setting all relations, verify by spot-checking one or two issues to confirm the relations show the expected blocking relationships.

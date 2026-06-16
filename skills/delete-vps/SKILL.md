@@ -12,7 +12,7 @@ Delete a Hetzner VPS by name and report what was destroyed. The entire flow runs
 
 Use these terms precisely (see CONTEXT.md):
 
-- **Bootstrap Script** — the idempotent `bootstrap/vps.sh` that configures a fresh Ubuntu 24.04 VPS
+- **Bootstrap Script** — the idempotent `vps/vps.sh` that configures a fresh Ubuntu 24.04 VPS
 
 ## Process
 
