@@ -4,9 +4,21 @@ A personal development toolkit for [pi](https://pi.dev/) — skills, extensions,
 
 ## Install
 
+creampi distributes two things — install whichever you need:
+
+**1. Skills** (agent-agnostic, works across all supported agents):
+
+```bash
+npx skills add privatedumbo/creampi
+```
+
+**2. The pi extension** (Linear SDK custom tools — required by `/run-tier`):
+
 ```bash
 pi install git:github.com/privatedumbo/creampi
 ```
+
+`pi install` also brings the skills along, so on pi it's the only command you need. Use `npx skills add` when consuming the skills from a non-pi agent. The `/run-tier` workflow requires the extension regardless, because it depends on custom tools (`linear_fetch_issues`, `compute_tiers`, `open_pr`, `check_ci`, `linear_update_status`) that skills alone cannot provide.
 
 Requires:
 - `LINEAR_API_KEY` environment variable
@@ -27,6 +39,13 @@ Requires:
 /to-prd           → publish a PRD as a parent Linear issue
 /to-issues        → break a plan into AFK/HITL vertical slices with blocking relations
 /to-briefing      → generate a stakeholder status update with a Gantt timeline
+```
+
+### Authoring & maintenance
+
+```
+/writing-skills        → TDD methodology for creating, editing, and verifying skills
+/sync-upstream-skills  → check forked skills (to-prd, to-issues, writing-skills) against upstream
 ```
 
 ### Execution phase
@@ -144,6 +163,8 @@ creampi/
 │   ├── to-prd/           #   /to-prd — publish a PRD as a parent issue
 │   ├── to-issues/        #   /to-issues — break plans into Linear issues
 │   ├── to-briefing/      #   /to-briefing — stakeholder status update + Gantt
+│   ├── writing-skills/   #   /writing-skills — TDD methodology for authoring skills (obra/superpowers)
+│   ├── sync-upstream-skills/ # /sync-upstream-skills — check forked skills against upstream
 │   ├── create-vps/       #   /create-vps — provision a Hetzner VPS
 │   ├── delete-vps/       #   /delete-vps — tear down a Hetzner VPS
 │   └── run-tier/         #   /run-tier — execute the next unblocked tier
@@ -154,9 +175,15 @@ creampi/
 │   ├── .creampi.yaml.example  # config template
 │   └── dotfiles/         #   shell config deployed by the bootstrap
 ├── docs/adr/             # architectural decision records
+├── LICENSE               # MIT
+├── THIRD-PARTY-NOTICES.md # licenses for vendored upstream skills
 └── CONTEXT.md            # domain vocabulary and project conventions
 ```
 
+## Attribution
+
+`to-prd` and `to-issues` are derived from [mattpocock/skills](https://github.com/mattpocock/skills) by Matt Pocock (MIT licensed). `writing-skills` is from [obra/superpowers](https://github.com/obra/superpowers) by Jesse Vincent (MIT licensed). See [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md) for full license texts. Run `/sync-upstream-skills` periodically to check for upstream changes.
+
 ## License
 
-Private.
+[MIT](LICENSE) © privatedumbo. Vendored upstream skills retain their own MIT licenses — see [Attribution](#attribution) and [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md).
