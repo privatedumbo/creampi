@@ -1,6 +1,7 @@
 ---
 name: to-issues
 description: Break a plan, spec, or PRD into independently-grabbable issues on the project issue tracker using tracer-bullet vertical slices, with native Linear blocking relations. Use when user wants to convert a plan into issues, create implementation tickets, or break down work into issues.
+disable-model-invocation: true
 ---
 
 <!--
@@ -38,6 +39,8 @@ Work from whatever is already in the conversation context. If the user passes an
 ### 3. Explore the codebase (optional)
 
 If you have not already explored the codebase, do so to understand the current state of the code. Issue titles and descriptions should use the project's domain glossary vocabulary (check for `CONTEXT.md` and `docs/adr/` — location noted in `docs/agents/ways-of-working.md`), and respect ADRs in the area you're touching.
+
+Look for opportunities to prefactor the code to make the implementation easier. "Make the change easy, then make the easy change."
 
 ### 4. Draft vertical slices
 
