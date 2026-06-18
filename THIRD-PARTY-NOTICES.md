@@ -12,6 +12,10 @@ This project includes material derived from third-party open-source software.
 - **Files derived:**
   - `skills/to-prd/SKILL.md` — from `skills/engineering/to-prd/SKILL.md`
   - `skills/to-issues/SKILL.md` — from `skills/engineering/to-issues/SKILL.md`
+  - `skills/domain-modeling/SKILL.md` — from `skills/engineering/domain-modeling/SKILL.md`
+  - `skills/domain-modeling/CONTEXT-FORMAT.md` — from `skills/engineering/domain-modeling/CONTEXT-FORMAT.md`
+  - `skills/domain-modeling/ADR-FORMAT.md` — from `skills/engineering/domain-modeling/ADR-FORMAT.md`
+  - `skills/grill-with-docs/SKILL.md` — from `skills/engineering/grill-with-docs/SKILL.md` (vendored as-is)
 
 ### MIT License
 
