@@ -165,6 +165,8 @@ creampi/
 │   ├── to-issues/        #   /to-issues — break plans into Linear issues
 │   ├── to-briefing/      #   /to-briefing — stakeholder status update + Gantt
 │   ├── domain-modeling/  #   /domain-modeling — build domain model (glossary + ADRs)
+│   ├── grill-with-docs/  #   /grill-with-docs — grilling session + domain modeling
+│   ├── grilling/         #   /grilling — one-question-at-a-time interview (mattpocock/skills)
 │   ├── writing-skills/   #   /writing-skills — TDD methodology for authoring skills (obra/superpowers)
 │   ├── sync-upstream-skills/ # /sync-upstream-skills — check forked skills against upstream
 │   ├── create-vps/       #   /create-vps — provision a Hetzner VPS
@@ -184,7 +186,7 @@ creampi/
 
 ## Attribution
 
-`to-prd`, `to-issues`, and `domain-modeling` are derived from [mattpocock/skills](https://github.com/mattpocock/skills) by Matt Pocock (MIT licensed). `writing-skills` is from [obra/superpowers](https://github.com/obra/superpowers) by Jesse Vincent (MIT licensed). See [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md) for full license texts. Run `/sync-upstream-skills` periodically to check for upstream changes.
+`to-prd`, `to-issues`, `domain-modeling`, `grill-with-docs`, and `grilling` are derived from [mattpocock/skills](https://github.com/mattpocock/skills) by Matt Pocock (MIT licensed). `writing-skills` is from [obra/superpowers](https://github.com/obra/superpowers) by Jesse Vincent (MIT licensed). See [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md) for full license texts. Run `/sync-upstream-skills` periodically to check for upstream changes.
 
 ## License
 
