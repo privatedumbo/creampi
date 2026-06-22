@@ -28,7 +28,11 @@ async function gh(...args: string[]): Promise<string> {
 export async function openPr(branch: string, issueId: string, issueTitle: string): Promise<PrResult> {
   const title = `${issueId}: ${issueTitle}`;
   const body = `Closes ${issueId}`;
-  const output = await gh("pr", "create", "--head", branch, "--title", title, "--body", body, "--json", "url,number");
+  // `gh pr create` does not support --json; on success it prints the new PR URL to stdout.
+  const createOutput = await gh("pr", "create", "--head", branch, "--title", title, "--body", body);
+  const url = createOutput.split("\n").map((line) => line.trim()).filter(Boolean).pop() ?? createOutput;
+  // Read back structured metadata for the PR we just created.
+  const output = await gh("pr", "view", url, "--json", "url,number");
   const parsed = JSON.parse(output);
   return { url: parsed.url, number: parsed.number };
 }
