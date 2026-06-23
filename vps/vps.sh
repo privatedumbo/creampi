@@ -183,7 +183,7 @@ fi
 PI_PACKAGES=(
   "npm:pi-subagents"
   "npm:@alasano/pi-linear"
-  "npm:pi-claude-oauth-adapter"
+  "npm:pi-anthropic-oauth"
   "git:github.com/privatedumbo/creampi"
 )
 
