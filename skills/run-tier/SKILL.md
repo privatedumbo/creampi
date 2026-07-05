@@ -35,9 +35,14 @@ models:
 workflow:
   review: true
   maxReviewRounds: 2
+  maxParallelWorkers: 4
 ```
 
+`maxParallelWorkers` (default `4`) caps how many workers run at once across a tier, passed through as `globalConcurrencyLimit` on every parallel `subagent()` dispatch. It prevents a large tier from fanning out 6+ model calls simultaneously and hitting provider rate limits.
+
 Only create a new file when neither the project-level nor user-level config exists. When `~/.creampi.yaml` exists, use it directly — do not copy it into the project root.
+
+> **Prerequisite (pi-subagents ≥ 0.33):** set `worktreeBaseDir` in `~/.pi/agent/extensions/subagent/config.json` to a stable trusted directory (e.g. a sibling of your repos). This pins where `worktree: true` creates isolated checkouts, avoiding the temp-dir cases where isolation silently fails and parallel workers race over the shared checkout. Each worker prompt below also independently verifies its own worktree before any git op (belt-and-suspenders).
 
 Read the resolved config. Use these values throughout the run.
 
@@ -83,11 +88,20 @@ subagent({
     // ... one per AFK slice
   ],
   worktree: true,
-  async: true
+  async: true,
+  globalConcurrencyLimit: {maxParallelWorkers}   // from workflow.maxParallelWorkers (default 4)
 })
 ```
 
 Before dispatching, call `linear_update_status` to set each issue to "In Progress".
+
+After dispatching, block on the batch before continuing to review/PRs:
+
+```typescript
+wait({ all: true })
+```
+
+`wait({ all: true })` returns when every async worker in the batch finishes **or needs attention** (a worker that went idle or blocked). Do not use sleep/status-polling loops. This is what keeps `/run-tier` correct in non-interactive `pi -p` runs — without it the turn can end while workers are still running. If `wait` reports a run needs attention, inspect it (see "Monitoring & recovery" below) before proceeding.
 
 #### Worker prompt
 
@@ -122,14 +136,15 @@ Read the coding standards file at {path-to-CODING_STANDARDS.md} before writing a
 
 ## Process
 
-0. Rename the worktree branch to the Linear convention: `git checkout -b {branch-name}`
+0. Verify worktree isolation BEFORE any git op: confirm `pwd` and `git rev-parse --show-toplevel` both point at your assigned worktree directory, not a shared checkout. If they do not match, stop and report — do not edit or commit.
+1. Rename the worktree branch to the Linear convention: `git checkout -b {branch-name}`
    (`{branch-name}` is the `branchName` field from the Linear issue response)
-1. Read the coding standards file
-2. Explore the codebase to understand current state
-3. RED: write one failing test for the next behavior
-4. GREEN: write minimal code to pass
-5. Repeat until acceptance criteria are met
-6. REFACTOR: deepen modules, extract duplication — only while GREEN
+2. Read the coding standards file
+3. Explore the codebase to understand current state
+4. RED: write one failing test for the next behavior
+5. GREEN: write minimal code to pass
+6. Repeat until acceptance criteria are met
+7. REFACTOR: deepen modules, extract duplication — only while GREEN
 
 Run tests before committing. Commit with message prefix '{issue-id}:'.
 After committing, push the branch to origin: `git push -u origin HEAD`.
@@ -165,6 +180,12 @@ Do not edit files. Do not run subagents.`,
 })
 ```
 
+Then block on the reviewer(s):
+
+```typescript
+wait({ all: true })
+```
+
 #### 6b. Synthesize findings
 
 After the reviewer completes, assess the findings:
@@ -189,11 +210,18 @@ Apply only the fixes listed above. Do not expand scope. Run tests after fixing. 
     // ... one per branch that needs fixes
   ],
   worktree: true,
-  async: true
+  async: true,
+  globalConcurrencyLimit: {maxParallelWorkers}
 })
 ```
 
-**Important:** Always use `worktree: true` when dispatching multiple fix workers in parallel. Without worktree isolation, parallel workers race over `git checkout` in the same directory, causing commits on wrong branches or lost work.
+Then block on the fix workers:
+
+```typescript
+wait({ all: true })
+```
+
+**Important:** Always use `worktree: true` when dispatching multiple fix workers in parallel. Without worktree isolation, parallel workers race over `git checkout` in the same directory, causing commits on wrong branches or lost work. Fix workers must perform the same step-0 worktree verification (`pwd` + `git rev-parse --show-toplevel`) as the initial workers before any git op.
 
 #### 6d. Repeat or stop
 
@@ -252,6 +280,27 @@ Next steps:
 **Do not proceed to the next tier.** The developer will review PRs, merge them, and re-invoke `/run-tier`. This is the **Tier Boundary** — the natural checkpoint where human judgment enters the pipeline.
 
 Linear is the state machine (ADR-0003). The next invocation of `/run-tier` will re-read Linear and pick up the new state.
+
+## Monitoring & recovery
+
+When `wait` reports a run finished with a failure or needs attention, inspect and recover before proceeding — do not silently re-dispatch.
+
+**Inspect what workers are doing:**
+
+```typescript
+subagent({ action: "status", view: "fleet" })                 // read-only overview of all active workers
+subagent({ action: "status", view: "transcript", id: "<run>" }) // tail one worker's output/session
+```
+
+Each child also leaves a durable `<run>_<agent>_transcript.jsonl` artifact, so a post-mortem is one file per worker instead of manual git/log spelunking.
+
+**Nudge a live worker instead of killing it:** if a worker is still running but off track (wrong branch, wrong file, over-broad scope), steer it rather than interrupt-and-re-dispatch:
+
+```typescript
+subagent({ action: "steer", id: "<run>", message: "You are on the wrong branch. Checkout {branch-name} before committing." })
+```
+
+Steer only works while the worker is alive. If a worker has already died (e.g. a transient `Connection error`), check whether any commits landed (`git log main..{branch}`) before re-dispatching, and prune any dangling worktrees + delete empty branches between attempts.
 
 ## Error handling
 
