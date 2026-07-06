@@ -5,6 +5,8 @@ models:
 workflow:
   review: true
   maxReviewRounds: 2
+  maxParallelWorkers: 4
+  worktreeBaseDir: "~/creampi-worktrees"
 
 vps:
   provider: hetzner      # only option today, extensible later
