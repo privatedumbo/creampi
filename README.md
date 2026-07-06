@@ -57,6 +57,8 @@ Requires:
 
 Reads Linear, computes tiers from the dependency graph, dispatches parallel agents in worktrees for AFK slices, pauses for HITL slices, opens PRs, checks CI, stops at the tier boundary for review. Re-run after merging to continue.
 
+To preview a run before dispatching anything, use the `run_tier_plan` tool (or `/creampi-doctor` for just the resolved environment). It prints the next tier's AFK/HITL slices and the environment governing the run — models, review, concurrency, and the resolved worktree base dir with its origin.
+
 ## Configure
 
 creampi uses a `.creampi.yaml` file for per-developer settings. The file is resolved using a fallback hierarchy (first match wins):
@@ -67,6 +69,10 @@ creampi uses a `.creampi.yaml` file for per-developer settings. The file is reso
 
 The file is `.gitignore`d — it's per-developer, not per-project.
 
+### Worktree isolation
+
+Parallel AFK slices run in isolated git worktrees. creampi owns *where* they live (`workflow.worktreeBaseDir`) and passes it to pi-subagents, which owns the isolation mechanism (ADR 0005). The default `~/creampi-worktrees` is a stable directory under `$HOME` — deliberately not the OS temp dir, where isolation can silently degrade. Precedence: a preset `PI_SUBAGENTS_WORKTREE_DIR` env var wins, then `.creampi.yaml`, then the default. Run `/creampi-doctor` or `run_tier_plan` to see the resolved value and its origin (`env` / `config` / `default`) before dispatching.
+
 ```yaml
 models:
   worker: "anthropic/claude-sonnet-4"    # model for AFK agents
@@ -75,6 +81,8 @@ models:
 workflow:
   review: true          # review worker output before opening PRs
   maxReviewRounds: 2    # max review iterations per worker
+  maxParallelWorkers: 4 # cap on concurrent workers per tier
+  worktreeBaseDir: "~/creampi-worktrees"  # where isolated worktrees live (default)
 
 vps:
   provider: hetzner      # only option today

@@ -4,11 +4,21 @@ import { LinearClient } from "./linear-client.js";
 import { createLinearSdkApi } from "./linear-sdk-api.js";
 import { computeTiers } from "./tier-computer.js";
 import { openPr, checkCi, checkMerge } from "./pr-manager.js";
+import { applyWorktreeBaseDir, loadConfig } from "./config.js";
+import { renderPlan } from "./plan.js";
 
 export default function creampiExtension(pi: ExtensionAPI) {
   // LinearClient backed by @linear/sdk
   const api = createLinearSdkApi();
   const client = new LinearClient(api);
+
+  // Point pi-subagents at a stable worktree base dir at activation. creampi
+  // owns the config surface (.creampi.yaml -> workflow.worktreeBaseDir);
+  // pi-subagents owns the worktree mechanism and reads our value through its
+  // published PI_SUBAGENTS_WORKTREE_DIR override. Without this it falls back to
+  // the OS temp dir, the fragile case where isolation silently degrades. See
+  // ADR 0005.
+  const worktreeBaseDir = applyWorktreeBaseDir(loadConfig());
 
   pi.registerTool({
     name: "linear_fetch_issues",
@@ -198,6 +208,52 @@ export default function creampiExtension(pi: ExtensionAPI) {
         ],
         details: { issueId: params.issueId, status: params.status },
       };
+    },
+  });
+
+  pi.registerTool({
+    name: "run_tier_plan",
+    label: "Run Tier Plan",
+    description:
+      "Preview what /run-tier will do for a parent issue BEFORE dispatching: the resolved environment (models, review, concurrency, worktree base dir) and the next tier's AFK/HITL slices. Read-only — fetches Linear and computes tiers but launches nothing.",
+    promptSnippet: "Preview the next run-tier dispatch (environment + next tier) without launching",
+    promptGuidelines: [
+      "Use run_tier_plan at the start of a run-tier invocation to show the developer the resolved config and the tier that will run before any worker is dispatched.",
+    ],
+    parameters: Type.Object({
+      parentIssueId: Type.String({ description: "The Linear parent issue identifier (e.g. ENG-1428)" }),
+    }),
+    async execute(_toolCallId, params) {
+      const config = loadConfig();
+      const children = await client.getChildIssues(params.parentIssueId);
+      const relations = await client.getBlockingRelations(children.map((c) => c.id));
+      const tiers = computeTiers(children, relations);
+      const text = renderPlan({ parentIssueId: params.parentIssueId, tiers, config, worktreeBaseDir });
+
+      return {
+        content: [{ type: "text", text }],
+        details: { parentIssueId: params.parentIssueId, tiers, worktreeBaseDir, configSource: config.source },
+      };
+    },
+  });
+
+  pi.registerCommand("creampi-doctor", {
+    description: "Show the resolved creampi environment (config source, models, worktree base dir)",
+    handler: async (_args, ctx) => {
+      const config = loadConfig();
+      const worker = config.models.worker ?? "(pi default)";
+      const reviewer = config.models.reviewer ?? "(pi default)";
+      const review = config.workflow.review ?? true;
+      const maxWorkers = config.workflow.maxParallelWorkers ?? 4;
+      const lines = [
+        `config source      ${config.source ?? "(built-in defaults)"}`,
+        `worker model       ${worker}`,
+        `reviewer model     ${reviewer}`,
+        `review             ${review ? "on" : "off"}`,
+        `max parallel       ${maxWorkers}`,
+        `worktree base dir  ${worktreeBaseDir.path}  [${worktreeBaseDir.origin}]`,
+      ];
+      ctx.ui.notify(lines.join("\n"), "info");
     },
   });
 }
