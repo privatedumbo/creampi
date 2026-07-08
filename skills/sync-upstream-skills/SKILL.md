@@ -17,6 +17,8 @@ These skills are derived from upstream repos (both MIT licensed):
 |---|---|---|
 | `skills/to-prd/SKILL.md` | `skills/engineering/to-prd/SKILL.md` | Replaced "seams" with "deep modules" language; added setup section pointing to `docs/agents/`; added `disable-model-invocation: true` |
 | `skills/to-issues/SKILL.md` | `skills/engineering/to-issues/SKILL.md` | Added Section 7 (Linear blocking relations for tier orchestration); added setup section pointing to `docs/agents/`; added `disable-model-invocation: true`; minor wording tweaks |
+| `skills/tdd/SKILL.md`, `tests.md`, `mocking.md` | `skills/engineering/tdd/*` | Vendored as-is; attribution comment added |
+| `skills/code-review/SKILL.md` | `skills/engineering/code-review/SKILL.md` | Setup ref → `/setup-privatedumbo-skills`; sub-agent mechanism adapted to the local `subagent` tool |
 | `skills/grill-with-docs/SKILL.md` | `skills/engineering/grill-with-docs/SKILL.md` | Vendored as-is, no modifications |
 | `skills/domain-modeling/SKILL.md` | `skills/engineering/domain-modeling/SKILL.md` | Vendored as-is, no modifications |
 
@@ -55,7 +57,6 @@ Compare the two lists. Classify each upstream skill as:
 | `setup-matt-pocock-skills` | We use `setup-privatedumbo-skills` with `docs/agents/` config instead |
 | `ask-matt` | Skill router — our pipeline is fixed (grill → prd → issues → tdd → run-tier) |
 | `implement` | Our `run-tier` worker prompt embeds this more thoroughly for AFK execution |
-| `tdd` | We vendor this to `~/.pi/agent/skills/` and `~/.agents/skills/` but not to this repo (identical to upstream, no modifications needed) |
 
 Any upstream skill not in the **Tracked** or **Skipped** tables above is **New** — present it to the user with its description and recommend adopt/skip/evaluate.
 
@@ -75,6 +76,12 @@ diff <(curl -s https://raw.githubusercontent.com/mattpocock/skills/main/skills/e
 
 # domain-modeling
 diff <(curl -s https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/domain-modeling/SKILL.md) skills/domain-modeling/SKILL.md
+
+# tdd (SKILL.md + tests.md + mocking.md)
+diff <(curl -s https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/tdd/SKILL.md) skills/tdd/SKILL.md
+
+# code-review
+diff <(curl -s https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/code-review/SKILL.md) skills/code-review/SKILL.md
 
 # writing-skills
 diff <(curl -s https://raw.githubusercontent.com/obra/superpowers/main/skills/writing-skills/SKILL.md) skills/writing-skills/SKILL.md
