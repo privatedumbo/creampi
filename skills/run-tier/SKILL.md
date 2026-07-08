@@ -247,8 +247,28 @@ When the review loop completes cleanly (no remaining blockers), report:
 
 After all workers complete (and reviews pass, if enabled), for each worker that produced commits:
 
-1. Call `open_pr` with the issue's Linear branch name (not the worktree-generated name), the issue ID, and the issue title
-2. Call `linear_update_status` to set the issue to "In Review"
+1. Assemble a PR body from context you already hold — the Linear issue (step 5), the worker's diff/commits, the reviewer findings (step 6), and CI intent. Do not fetch anything new. Use this structure:
+
+   ```markdown
+   ## Why
+   {issue description — 1-2 sentences of intent}
+
+   ## What changed
+   {3-6 bullets: the actual edits, derived from the diff/commits}
+
+   ## Testing
+   {tests added/changed + how they were run}
+
+   ## Reviewer notes
+   {reviewer's deferred/optional findings from step 6, or "Clean review after N round(s)"}
+
+   <!-- creampi: tier={N} issue={issue-id} reviewed={true|false} -->
+   ```
+
+   Keep it tight — a reviewer skims Why, then reads What changed against the diff. The HTML comment is machine provenance only; `Closes {issue-id}` is appended by `open_pr`, do not add it yourself.
+
+2. Call `open_pr` with the issue's Linear branch name (not the worktree-generated name), the issue ID, the issue title, and the assembled `body`
+3. Call `linear_update_status` to set the issue to "In Review"
 
 If a worker produced no commits or failed, report it but continue with the other workers.
 

@@ -101,14 +101,21 @@ export default function creampiExtension(pi: ExtensionAPI) {
     promptSnippet: "Open a PR for a completed agent worktree branch",
     promptGuidelines: [
       "Use open_pr after a worker agent completes on a worktree branch to create a reviewable PR.",
+      "Pass a Markdown body with reviewer context (Why / What changed / Testing / Reviewer notes) assembled from the issue, diff, and review findings you already hold. 'Closes <issueId>' is appended automatically.",
     ],
     parameters: Type.Object({
       branch: Type.String({ description: "The git branch name to create the PR from" }),
       issueId: Type.String({ description: "The Linear issue identifier (e.g. ENG-365)" }),
       issueTitle: Type.String({ description: "The issue title for the PR title" }),
+      body: Type.Optional(
+        Type.String({
+          description:
+            "Markdown PR body with reviewer context (Why / What changed / Testing / Reviewer notes). 'Closes <issueId>' is appended automatically.",
+        }),
+      ),
     }),
     async execute(_toolCallId, params) {
-      const result = await openPr(params.branch, params.issueId, params.issueTitle);
+      const result = await openPr(params.branch, params.issueId, params.issueTitle, params.body);
 
       return {
         content: [
