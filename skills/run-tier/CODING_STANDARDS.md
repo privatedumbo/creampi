@@ -44,6 +44,19 @@ test("createUser saves to database", async () => {
   const row = await db.query("SELECT * FROM users WHERE name = ?", ["Alice"]);
   expect(row).toBeDefined();
 });
+
+// BAD: Tautological — expected value recomputes the implementation, so the
+// test passes by construction and can never disagree with the code
+test("calculateTotal sums line items", () => {
+  const items = [{ price: 10 }, { price: 5 }];
+  const expected = items.reduce((sum, i) => sum + i.price, 0);
+  expect(calculateTotal(items)).toBe(expected);
+});
+
+// GOOD: Expected value is an independent, known literal
+test("calculateTotal sums line items", () => {
+  expect(calculateTotal([{ price: 10 }, { price: 5 }])).toBe(15);
+});
 ```
 
 Red flags:
@@ -54,6 +67,7 @@ Red flags:
 - Test breaks when refactoring without behavior change
 - Test name describes HOW not WHAT
 - Verifying through external means (e.g. querying a DB) instead of through the interface
+- Expected value recomputes the result the way the code does — it must come from an independent source (known literal, worked example, spec)
 
 ### Mocking
 

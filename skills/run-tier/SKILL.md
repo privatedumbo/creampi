@@ -169,7 +169,7 @@ subagent({
   agent: "reviewer",
   task: `Review the current diff on branch {branch} for issue {issue-id}: {issue-title}.
 
-Inspect the changed files directly. Return concise, evidence-backed findings with file/line references. Categorize each finding as:
+Judge the diff against the coding standards at {path-to-CODING_STANDARDS.md} — the same file the worker followed. Inspect the changed files directly. Return concise, evidence-backed findings with file/line references. Categorize each finding as:
 - 🛑 Blocker — must fix before merge
 - ⚠️ Fix worth doing now — should fix, not a blocker
 - 💡 Optional — nice to have, can defer
