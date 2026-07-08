@@ -25,11 +25,17 @@ async function gh(...args: string[]): Promise<string> {
   return stdout.trim();
 }
 
-export async function openPr(branch: string, issueId: string, issueTitle: string): Promise<PrResult> {
+export async function openPr(
+  branch: string,
+  issueId: string,
+  issueTitle: string,
+  body?: string,
+): Promise<PrResult> {
   const title = `${issueId}: ${issueTitle}`;
-  const body = `Closes ${issueId}`;
+  // Caller-supplied body carries reviewer context; always append the Linear close link.
+  const prBody = body?.trim() ? `${body.trim()}\n\nCloses ${issueId}` : `Closes ${issueId}`;
   // `gh pr create` does not support --json; on success it prints the new PR URL to stdout.
-  const createOutput = await gh("pr", "create", "--head", branch, "--title", title, "--body", body);
+  const createOutput = await gh("pr", "create", "--head", branch, "--title", title, "--body", prBody);
   const url = createOutput.split("\n").map((line) => line.trim()).filter(Boolean).pop() ?? createOutput;
   // Read back structured metadata for the PR we just created.
   const output = await gh("pr", "view", url, "--json", "url,number");
